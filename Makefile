@@ -34,7 +34,7 @@ $(info OBJS= $(OBJS))
 
 all:$(OBJS) libiec61850.so
 	@echo "12345 ssdlh"
-	-cp libiec61850.so  /mnt/hgfs/Tcu_lib/libiec61850.so;
+#	-cp libiec61850.so  /mnt/hgfs/Tcu_lib/libiec61850.so;
 
 libiec61850.so: $(OBJS)
 	@echo "54321 xxxxx"

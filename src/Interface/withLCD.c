@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "YX_Define.h"
+#include "YC_Define.h"
 LCD_YC_YX_DATA yc_data[MAX_TOTAL_PCS_NUM];
 // short Yc_PW_Data[MAX_TOTAL_PCS_NUM];//
 unsigned int Yx_Pcs_Status = 0;
@@ -12,7 +13,37 @@ unsigned int Yx_Pcs_Status = 0;
 PARA_61850 Frome61850;
 PARA_61850 *pFrome61850 = (PARA_61850 *)&Frome61850;
 
-unsigned short yc_realtime[] = {};
+unsigned char yc_Send_Flag[][4] = {
+	{Line_AB_voltage, 1, 0, 1},
+	{Line_BC_voltage, 1, 0, 1},
+	{Line_CA_voltage, 1, 0, 1},
+	{Phase_A_current, 1, 1, 0},
+	{Phase_B_current, 1, 1, 0},
+	{Phase_C_current, 1, 1, 0},
+	{Power_factor, 1, 0, 1},
+	{Frequency, 1, 0, 1},
+	{Active_power, 1, 0, 0},
+	{Reactive_power, 1, 0, 1},
+	{Apparent_power, 1, 0, 1},
+};
+
+YX_SEND_FLAG yx_send_flag[] = {
+	{0, bPcsStoped, 1, 0, 0},
+	{0, bSavingStatus, 1, 0, 0},
+	{0, bFaultStatus, 1, 0, 0},
+	{0, bFffLineRunning, 1, 0, 0},
+	{0, bMergeCircuit, 1, 0, 0},
+	{0, bPcsRunning, 1, 0, 0},
+
+	{1, bConnectMode, 1, 0, 0},
+
+	{4, bConstPwDischargeMode, 1, 0, 0},
+	{4, bConstPwChargeMode, 1, 0, 0},
+	{4, bConstCurCharging, 1, 0, 0},
+	{4, bConstCurDischarging, 1, 0, 0},
+
+};
+
 unsigned char pcs_fault_flag[MAX_TOTAL_PCS_NUM];
 
 int recvfromlcd(unsigned char type, void *pdata)
@@ -22,7 +53,7 @@ int recvfromlcd(unsigned char type, void *pdata)
 	{
 	case _YC_:
 	{
-		int Apparent_power;
+		// int Apparent_power;
 		LCD_YC_YX_DATA temp;
 		temp = *(LCD_YC_YX_DATA *)pdata;
 		yc_data[temp.sn - 1] = temp;
