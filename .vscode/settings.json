@@ -4,6 +4,8 @@
 		"thread61850.h": "c",
 		"iec61850_type.h": "c",
 		"writepcs.h": "c",
-		"withlcd.h": "c"
+		"withlcd.h": "c",
+		"withbams.h": "c",
+		"interface.h": "c"
 	}
 }

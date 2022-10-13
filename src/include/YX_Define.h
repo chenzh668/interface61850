@@ -5,6 +5,10 @@
 #define clrbit(x, y) x &= ~(1 << y) //将X的第Y位清0
 //遥信
 // posWord=0;
+
+#define u16_InvRunState1 0		 //变流运行状态1 1200
+#define st_FlagSciSystemState1 1 //变流器状态字1 1201
+
 // u16_InvRunState1（变流运行状态1）遥信第一个寄存器1200
 #define bPcsStoped 0	 //停机，传输到EMS
 #define bSavingStatus 1	 //节能方式运行，传输到EMS

@@ -34,11 +34,11 @@ $(info OBJS= $(OBJS))
 
 all:$(OBJS) libiec61850.so
 	@echo "12345 ssdlh"
-#	-cp libiec61850.so  /mnt/hgfs/Tcu_lib/libiec61850.so;
+	-cp libiec61850.so  /mnt/hgfs/Tcu_lib/libiec61850_1.so;
 
 libiec61850.so: $(OBJS)
 	@echo "54321 xxxxx"
-	$(LINKER)   $(LIB_DIR) -fmessage-length=0 -shared $^ -lDllCommon -lpthread -lrt -ldl -o $@ 
+	$(LINKER)   $(LIB_DIR) -fmessage-length=0 -shared $^ -lDllCommon -lpthread -lrt  -o $@ 
 define MAKE_C
 
 $(eval OBJ = $(addprefix $(1)/,$(patsubst %.c,%.o,$(notdir $(2)))))
