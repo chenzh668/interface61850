@@ -528,10 +528,12 @@ void handleRecvFrom61850(data_info_t *pdata)
 				para.item = ONE_FM_QW_SETTING;
 		}
 	}
-	else if (temp.sAddr.portID == 3 && temp.sAddr.typeID == 6)
+	else if (temp.sAddr.portID == 3 && temp.sAddr.typeID == 5 && temp.sAddr.pointID==1)
 	{
 		type = _PCS_YK_;
 		para.item = temp.sAddr.devID;
+		para.el_tag = temp.el_tag;
+		para.data[0]=temp.data[0];
 	}
 
 	if (ykOrder_61850 != NULL)
