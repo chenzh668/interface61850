@@ -1,4 +1,4 @@
-/mnt/hgfs/emu-app/interface61850/build/Thread61850.o: \
+/mnt/hgfs/zg/interface61850/build/Thread61850.o: \
  src/Threads/Thread61850.c src/Threads/Thread61850.h \
  src/include/lib61850_main.h src/include/lib61850_main.h \
  src/include/IEC61850_type.h \

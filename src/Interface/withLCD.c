@@ -111,13 +111,15 @@ SendTo61850_count yc_count_tab[] = {
 // 	{Reactive_power, 10, _FLOAT_, 4, 2, 10}, //交流无功功率
 // 	{Apparent_power, 11, _FLOAT_, 4, 2, 10}	 //交流视在功率
 // };
-int LcdTo61850_YC(unsigned char pcsid, unsigned short *pdata1)
+int LcdTo61850_YC(unsigned char pcsid, unsigned short *pdata)
 {
 	int i = 0;
 	MyData senddata;
 	int ret = 0xff;
+	unsigned char b1, b2;
 	float temp;
-	short *pdata = (short *)pdata1;
+	short temp_i;
+
 	for (i = 0; i < 11; i++)
 	{
 		senddata.data_info[i].sAddr.portID = INFO_PCS;
@@ -129,7 +131,10 @@ int LcdTo61850_YC(unsigned char pcsid, unsigned short *pdata1)
 
 		if (yc_realtime_tab[i].el_tag == _FLOAT_)
 		{
-			temp = ((float)pdata[yc_realtime_tab[i].pos_protocol]) / yc_realtime_tab[i].precision;
+			b1 = pdata[yc_realtime_tab[i].pos_protocol] / 256;
+			b2 = pdata[yc_realtime_tab[i].pos_protocol] % 256;
+			temp_i = b2 * 256 + b1;
+			temp = (float)temp_i / yc_realtime_tab[i].precision;
 			*(float *)&senddata.data_info[i].data = temp;
 		}
 	}
@@ -200,11 +205,12 @@ static int countSumAve_yc_Send(void)
 {
 	int sumdata[20];
 	int i, j;
-	//int margin;
+	// int margin;
 	MyData senddata;
 	int n = ARRAY_LEN(yc_count_tab);
 	int m = 0; //统计故障pcs
 	float temp;
+	unsigned char b1, b2;
 	int ret;
 	for (i = 0; i < 20; i++)
 	{
@@ -221,7 +227,11 @@ static int countSumAve_yc_Send(void)
 		{
 
 			if (pcs_fault_flag[j] == 0)
-				sumdata[i] += (int)yc_data[j].pcs_data[yc_count_tab[i].pos_protocol];
+			{
+				b1 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] % 256;
+				b2 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] / 256;
+				sumdata[i] += (int)(b1 * 256 + b2);
+			}
 			else
 				m++;
 		}
@@ -232,28 +242,26 @@ static int countSumAve_yc_Send(void)
 
 		if (yc_count_tab[i].flag == 2) //求平均
 		{
-			sumdata[i] /= (total_pcsnum - m);//yc_count_tab[i].precision;
+			sumdata[i] /= (total_pcsnum - m); // yc_count_tab[i].precision;
 		}
 	}
-    for(i=0;i<n;i++)
+	for (i = 0; i < n; i++)
 	{
 		senddata.data_info[i].sAddr.portID = 1;
 		senddata.data_info[i].sAddr.devID = 1;
 		senddata.data_info[i].sAddr.typeID = 2;
 		senddata.data_info[i].data_size = yc_count_tab[i].data_size;
-		senddata.data_info[i].el_tag =yc_count_tab[i].el_tag;
+		senddata.data_info[i].el_tag = yc_count_tab[i].el_tag;
 		senddata.data_info[i].sAddr.pointID = yc_count_tab[i].pointID;
-		if(yc_count_tab[i].el_tag==_FLOAT_)
+		if (yc_count_tab[i].el_tag == _FLOAT_)
 		{
-			 temp = (float)sumdata[i] / yc_realtime_tab[i].precision;
-		      *(float *)&senddata.data_info[i].data[0] = temp;	
+			temp = (float)sumdata[i] / yc_realtime_tab[i].precision;
+			*(float *)&senddata.data_info[i].data[0] = temp;
 		}
-
-
 	}
-	senddata.num=n;
-	//margin = Ave_Max_PW * (total_pcsnum - m) - sumdata[10];
-		ret = sendtotask(&senddata);
+	senddata.num = n;
+	// margin = Ave_Max_PW * (total_pcsnum - m) - sumdata[10];
+	ret = sendtotask(&senddata);
 
 	if (ret == 1)
 	{
@@ -332,6 +340,7 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 	int base = 12;
 	int ret;
 	printf("LcdTo61850_YX收到遥信数据  sn=%d  lcdid=%d  pcsid_lcd=%d\n", temp.sn, temp.lcdid, temp.pcsid);
+
 	for (i = 0; i < temp.data_len; i++)
 	{
 
@@ -341,8 +350,8 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 		senddata.data_info[i].data_size = 2;
 		senddata.data_info[i].el_tag = _U_SHORT_;
 		senddata.data_info[i].sAddr.pointID = base + i;
-		senddata.data_info[i].data[0] = temp.pcs_data[i] % 256;
-		senddata.data_info[i].data[1] = temp.pcs_data[i] / 256;
+		senddata.data_info[i].data[0] = temp.pcs_data[i] / 256;
+		senddata.data_info[i].data[1] = temp.pcs_data[i] % 256;
 	}
 	senddata.num = temp.data_len;
 	ret = sendtotask(&senddata);
@@ -507,8 +516,7 @@ void handleRecvFrom61850(data_info_t *pdata)
 		type = _BMS_YK_;
 
 		para.item = temp.sAddr.pointID;
-		printf("EMS遥控要求！！！para.item=%d\n",para.item);
-
+		printf("EMS遥控要求！！！para.item=%d\n", para.item);
 	}
 	else if (temp.sAddr.portID == 1 && temp.sAddr.typeID == 6)
 	{
@@ -528,12 +536,12 @@ void handleRecvFrom61850(data_info_t *pdata)
 				para.item = ONE_FM_QW_SETTING;
 		}
 	}
-	else if (temp.sAddr.portID == 3 && temp.sAddr.typeID == 5 && temp.sAddr.pointID==1)
+	else if (temp.sAddr.portID == 3 && temp.sAddr.typeID == 5 && temp.sAddr.pointID == 1)
 	{
 		type = _PCS_YK_;
 		para.item = temp.sAddr.devID;
 		para.el_tag = temp.el_tag;
-		para.data[0]=temp.data[0];
+		para.data[0] = temp.data[0];
 	}
 
 	if (ykOrder_61850 != NULL)
@@ -545,9 +553,9 @@ void handleRecvFrom61850(data_info_t *pdata)
 			ykOrder_61850(type, &para, backYkFromLce);
 	}
 }
-	// typedef int (*CallbackYK)(unsigned char, void *pdata);			  //遥控回调函数签名
+// typedef int (*CallbackYK)(unsigned char, void *pdata);			  //遥控回调函数签名
 
-	// typedef int (*yk_fun)(unsigned char, YK_PARA *, CallbackYK pfun); //命令处理函数指针
+// typedef int (*yk_fun)(unsigned char, YK_PARA *, CallbackYK pfun); //命令处理函数指针
 
 void subscribeFromLcd(void)
 {
@@ -593,8 +601,8 @@ void subscribeFromLcd(void)
 
 int backYkFromLce(unsigned char type, void *pdata)
 {
-	int xx ;
-	xx=(int*)pdata;
-	printf("61850接口模块收到 backYkFromLce type=%d xx=%d\n",type,xx);
+	int xx;
+	xx = (int *)pdata;
+	printf("61850接口模块收到 backYkFromLce type=%d xx=%d\n", type, xx);
 	return 0;
 }
