@@ -1,5 +1,5 @@
-/mnt/hgfs/emu-app/interface61850/build/withBAMS.o: \
- src/interface/withBAMS.c src/interface/withBAMS.h src/include/sys.h \
+/mnt/hgfs/zg/interface61850/build/withBAMS.o: src/interface/withBAMS.c \
+ src/interface/withBAMS.h src/include/sys.h \
  /opt/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin/../arm-linux-gnueabihf/libc/usr/include/arm-linux-gnueabihf/bits/pthreadtypes.h \
  /opt/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin/../arm-linux-gnueabihf/libc/usr/include/./endian.h \
  /opt/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin/../arm-linux-gnueabihf/libc/usr/include/./features.h \

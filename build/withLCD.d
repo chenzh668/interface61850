@@ -1,4 +1,4 @@
-/mnt/hgfs/emu-app/interface61850/build/withLCD.o: src/interface/withLCD.c \
+/mnt/hgfs/zg/interface61850/build/withLCD.o: src/interface/withLCD.c \
  src/interface/withLCD.h src/interface/interface.h \
  src/Threads/Thread61850.h src/include/lib61850_main.h \
  src/include/lib61850_main.h src/include/IEC61850_type.h \
