@@ -145,8 +145,7 @@ void *thread_61850_read(void *arg)
 	}
 
 	g_sys_status = 1;
-	subscribeFromLcd();
-	subscribeFromBams();
+
 	// testCallYK();
 
 	while (1)
@@ -336,16 +335,17 @@ void CreateThreads(void *para)
 	if (FAIL == CreateSettingThread(&ThreadID, &Thread_attr, (void *)thread_61850_read, NULL, 1, 1))
 	{
 		printf(" thread_61850_read CREATE ERR!\n");
-		exit(1);
+		//exit(1);
 	}
 	if (FAIL == CreateSettingThread(&ThreadID, &Thread_attr, (void *)thread_61850_write, NULL, 1, 1))
 	{
 		printf(" thread_61850_write CREATE ERR!\n");
-		exit(1);
+		//exit(1);
 	}
 
 	g_lcd_qmegid = os_create_msgqueue(&key, 1);
-
+    //subscribeFromLcd();
+	subscribeFromBams();
 	printf("thread_61850 CREATE success!\n");
 }
 

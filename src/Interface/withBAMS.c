@@ -86,6 +86,8 @@ int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
 	ret = sendtotask(&senddata);
 	return ret;
 }
+
+
 static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 {
 	static float sum_Bams_MX_DPW = 0;
@@ -169,8 +171,19 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 	}
 	return 0;
 }
+int countPcsNum_Bms(unsigned int flag_recv)
+{
+	int i;
+	int num_pcs = 0;
 
-int recvfromBams(unsigned char pcsid, unsigned char type, void *pdata)
+	for (i = 0; i < 18; i++)
+	{
+		if ((flag_recv & (1 << i)) != 0)
+			num_pcs++;
+	}
+	return num_pcs;
+}
+int recvfromBams_ems(unsigned char pcsid, unsigned char type, void *pdata)
 {
 
 	switch (type)
@@ -178,21 +191,30 @@ int recvfromBams(unsigned char pcsid, unsigned char type, void *pdata)
 	case _ALL_:
 	{
 		BmsData bms_data;
+		static unsigned int flag_recv_bms[] = {0, 0};
 		bms_data = *(BmsData *)pdata;
 		unsigned char *p = bms_data.buf_data;
-		printf("aaaaaaaaaaaaaaaaa\n");
+		int num_pcs1, num_pcs2, num_pcs;	
+
+		flag_recv_bms[bms_data.bmsid] |= (1 << pcsid);
 		if (bms_data.bmsid == 0)
 		{
+
 			BamsTo61850(pcsid, p);
+			num_pcs1 = countPcsNum_Bms(flag_recv_bms[0]);
 		}
 		else
 		{
+
 			BamsTo61850(pcsid + 18, p);
+			num_pcs2 = (flag_recv_bms[1]);
 		}
 
 		myprintbuf(bms_data.lendata, bms_data.buf_data);
-
-		//	countSumAve_Send(pcsid, bms_data.buf_data);
+        num_pcs = num_pcs1 + num_pcs2;
+		printf("61850接口收到来自bms数据 recvfromBams_ems pcsid=%d num_pcs=%d\n",pcsid,num_pcs);
+		// if(num_pcs>=total_pcsnum)
+		//    countSumAve_Send(bms_data.buf_data);
 	}
 	break;
 	case _SOC_:
@@ -217,7 +239,7 @@ void subscribeFromBams(void)
 	typedef int (*in_fun)(unsigned char type, outBmsData2Other pfun);	   //命令处理函数指针
 	in_fun my_func = NULL;
 
-	//打开动态链接库
+	printf("打开动态链接库 /usr/lib/libbams_rtu.so\n");
 
 	handle = dlopen(LIB_BAMS_PATH, RTLD_LAZY);
 	if (!handle)
@@ -235,7 +257,7 @@ void subscribeFromBams(void)
 
 		exit(EXIT_FAILURE);
 	}
-	printf("interface61850 订阅BAMS数据！\n");
-	my_func(_ALL_, recvfromBams);
-	my_func(_SOC_, recvfromBams);
+	printf("111interface61850 订阅BAMS数据！\n");
+	my_func(_ALL_, recvfromBams_ems);
+	my_func(_SOC_, recvfromBams_ems);
 }

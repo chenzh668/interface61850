@@ -1,7 +1,7 @@
-/mnt/hgfs/zg/interface61850/build/interface.o: src/interface/interface.c \
- src/interface/interface.h src/Threads/Thread61850.h \
- src/include/lib61850_main.h src/include/lib61850_main.h \
- src/include/IEC61850_type.h \
+/mnt/hgfs/off-zgemu/interface61850/build/interface.o: \
+ src/interface/interface.c src/interface/interface.h \
+ src/Threads/Thread61850.h src/include/lib61850_main.h \
+ src/include/lib61850_main.h src/include/IEC61850_type.h \
  /opt/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin/../lib/gcc/arm-linux-gnueabihf/4.7.3/include/stdint.h \
  /opt/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin/../arm-linux-gnueabihf/libc/usr/include/./stdint.h \
  /opt/gcc-linaro-arm-linux-gnueabihf-4.7-2013.03-20130313_linux/bin/../arm-linux-gnueabihf/libc/usr/include/./features.h \

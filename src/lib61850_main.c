@@ -4,10 +4,13 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "sys.h"
+#include "withBAMS.h"
+#include "withLCD.h"
 int lib61850_main(void *para)
 {
 	// PARA_MODTCP Para_Modtcp;
 
 	CreateThreads(para);
+
 	return 0;
 }

@@ -15,7 +15,8 @@ int sendtotask(MyData *senddata)
 	msgLcd msg;
 	msg.msgtype = 1;
 	int ret;
-
+    if(g_sys_status==0)
+		return 0;
 	memcpy(msg.data, (char *)senddata, sizeof(MyData));
 
 	if (msgsnd(g_lcd_qmegid, &msg, sizeof(msgLcd), IPC_NOWAIT) != -1)
