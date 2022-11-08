@@ -30,17 +30,17 @@ SendTo61850 bms_SendTo61850_Tab[] = {
 
 	{2, 0, _BOOL_, 1, 1, 1},
 	{14, 1, _BOOL_, 1, 1, 1},
-	{0, 2, _FLOAT_, 4, 2, 1},	  // 1最大允许充电 功率 float
-	{1, 3, _FLOAT_, 4, 2, 1},	  // 2最大允许放电 功率 float
-	{3, 4, _FLOAT_, 4, 2, 1},	  // 4总电压  float
-	{4, 5, _FLOAT_, 4, 2, 1},	  // 5最大允许充电 电流float
-	{5, 6, _FLOAT_, 4, 2, 1},	  // 6最大允许放电 电流float
-	{6, 7, _FLOAT_, 4, 2, 1},	  // 7电池总电流float
-	{7, 8, _FLOAT_, 4, 2, 1},	  // 8电池 SOC float
-	{8, 9, _FLOAT_, 4, 2, 1},	  // 9电池剩余可充 电量float
-	{9, 10, _FLOAT_, 4, 2, 1},	  // 10电池剩余可放 电量float
-	{10, 11, _FLOAT_, 4, 2, 1},	  // 11单体最高电压float
-	{11, 12, _FLOAT_, 4, 2, 1},	  // 12单体最低电压float
+	{0, 2, _FLOAT_, 4, 2, 10},	  // 1最大允许充电 功率 float
+	{1, 3, _FLOAT_, 4, 2, 10},	  // 2最大允许放电 功率 float
+	{3, 4, _FLOAT_, 4, 2, 10},	  // 4总电压  float
+	{4, 5, _FLOAT_, 4, 2, 1000},	  // 5最大允许充电 电流float
+	{5, 6, _FLOAT_, 4, 2, 1000},	  // 6最大允许放电 电流float
+	{6, 7, _FLOAT_, 4, 2, 1000},	  // 7电池总电流float
+	{7, 8, _FLOAT_, 4, 2, 10},	  // 8电池 SOC float
+	{8, 9, _FLOAT_, 4, 2, 10},	  // 9电池剩余可充 电量float
+	{9, 10, _FLOAT_, 4, 2, 10},	  // 10电池剩余可放 电量float
+	{10, 11, _FLOAT_, 4, 2, 10},	  // 11单体最高电压float
+	{11, 12, _FLOAT_, 4, 2, 10},	  // 12单体最低电压float
 	{12, 13, _U_SHORT_, 2, 2, 1}, // 13运行状态 u16
 	{13, 14, _U_SHORT_, 2, 2, 1}  // 14需求
 };
@@ -50,7 +50,7 @@ int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
 	int i = 0;
 	MyData senddata;
 	int ret = 0xff;
-	short temp;
+
 	for (i = 0; i < 15; i++)
 	{
 		senddata.data_info[i].sAddr.portID = INFO_BMS;
@@ -72,11 +72,14 @@ int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
 		{
 			if (bms_SendTo61850_Tab[i].el_tag == _FLOAT_)
 			{
-				temp = pdata[bms_SendTo61850_Tab[i].pos_protocol * 2] * 256 + pdata[bms_SendTo61850_Tab[i].pos_protocol * 2 + 1];
-				*(float *)&senddata.data_info[i].data = (float)temp;
+				float temp_f;
+				temp_f = (float)(pdata[bms_SendTo61850_Tab[i].pos_protocol * 2] * 256 + pdata[bms_SendTo61850_Tab[i].pos_protocol * 2 + 1]);
+				temp_f/=bms_SendTo61850_Tab[i].precision;
+				*(float *)&senddata.data_info[i].data = temp_f;
 			}
 			else if (bms_SendTo61850_Tab[i].el_tag == _U_SHORT_)
 			{
+
 				senddata.data_info[i].data[0] = pdata[bms_SendTo61850_Tab[i].pos_protocol * 2];
 				senddata.data_info[i].data[1] = pdata[bms_SendTo61850_Tab[i].pos_protocol * 2 + 1];
 			}
@@ -234,12 +237,13 @@ void subscribeFromBams(void)
 
 	void *handle;
 	char *error;
+	static int yy=0;
 #define LIB_BAMS_PATH "/usr/lib/libbams_rtu.so"
 	typedef int (*outBmsData2Other)(unsigned char, unsigned char, void *); //输出数据
 	typedef int (*in_fun)(unsigned char type, outBmsData2Other pfun);	   //命令处理函数指针
 	in_fun my_func = NULL;
 
-	printf("打开动态链接库 /usr/lib/libbams_rtu.so\n");
+	printf("61850打开动态链接库 /usr/lib/libbams_rtu.so yy=%d\n",yy++);
 
 	handle = dlopen(LIB_BAMS_PATH, RTLD_LAZY);
 	if (!handle)

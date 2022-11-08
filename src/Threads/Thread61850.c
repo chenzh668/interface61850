@@ -344,7 +344,7 @@ void CreateThreads(void *para)
 	}
 
 	g_lcd_qmegid = os_create_msgqueue(&key, 1);
-    //subscribeFromLcd();
+   // subscribeFromLcd();
 	subscribeFromBams();
 	printf("thread_61850 CREATE success!\n");
 }
