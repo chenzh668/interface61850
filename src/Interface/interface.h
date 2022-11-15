@@ -72,7 +72,7 @@ typedef struct
 } MyData;
 
 extern int total_pcsnum;
-extern int g_flag_RecvNeed;
+extern int g_flag_RecvNeed_PCS;
 extern int g_flag_RecvNeed_LCD;
 extern float Ave_Max_PW;
 extern float Ave_Max_DPW;

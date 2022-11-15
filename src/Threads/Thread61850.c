@@ -328,9 +328,9 @@ void CreateThreads(void *para)
 	}
 	if (total_pcsnum > 36)
 		total_pcsnum = 36;
-	g_flag_RecvNeed = countRecvFlag(total_pcsnum);
+	g_flag_RecvNeed_PCS = countRecvFlag(total_pcsnum);
 	g_flag_RecvNeed_LCD = countRecvFlag(pFrome61850->lcdnum);
-	printf("61850从主程序获得的参数 %d  %d total_pcs=%d  flagneed=%x\n", pFrome61850->lcdnum, pFrome61850->balance_rate, total_pcsnum, g_flag_RecvNeed);
+	printf("61850从主程序获得的参数 %d  %d total_pcs=%d  flagneed=%x\n", pFrome61850->lcdnum, pFrome61850->balance_rate, total_pcsnum, g_flag_RecvNeed_PCS);
 
 	if (FAIL == CreateSettingThread(&ThreadID, &Thread_attr, (void *)thread_61850_read, NULL, 1, 1))
 	{
@@ -344,7 +344,7 @@ void CreateThreads(void *para)
 	}
 
 	g_lcd_qmegid = os_create_msgqueue(&key, 1);
-   // subscribeFromLcd();
+     subscribeFromLcd();
 	subscribeFromBams();
 	printf("thread_61850 CREATE success!\n");
 }

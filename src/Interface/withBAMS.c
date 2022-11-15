@@ -33,14 +33,14 @@ SendTo61850 bms_SendTo61850_Tab[] = {
 	{0, 2, _FLOAT_, 4, 2, 10},	  // 1最大允许充电 功率 float
 	{1, 3, _FLOAT_, 4, 2, 10},	  // 2最大允许放电 功率 float
 	{3, 4, _FLOAT_, 4, 2, 10},	  // 4总电压  float
-	{4, 5, _FLOAT_, 4, 2, 1000},	  // 5最大允许充电 电流float
-	{5, 6, _FLOAT_, 4, 2, 1000},	  // 6最大允许放电 电流float
-	{6, 7, _FLOAT_, 4, 2, 1000},	  // 7电池总电流float
+	{4, 5, _FLOAT_, 4, 2, 1000},  // 5最大允许充电 电流float
+	{5, 6, _FLOAT_, 4, 2, 1000},  // 6最大允许放电 电流float
+	{6, 7, _FLOAT_, 4, 2, 1000},  // 7电池总电流float
 	{7, 8, _FLOAT_, 4, 2, 10},	  // 8电池 SOC float
 	{8, 9, _FLOAT_, 4, 2, 10},	  // 9电池剩余可充 电量float
 	{9, 10, _FLOAT_, 4, 2, 10},	  // 10电池剩余可放 电量float
-	{10, 11, _FLOAT_, 4, 2, 10},	  // 11单体最高电压float
-	{11, 12, _FLOAT_, 4, 2, 10},	  // 12单体最低电压float
+	{10, 11, _FLOAT_, 4, 2, 10},  // 11单体最高电压float
+	{11, 12, _FLOAT_, 4, 2, 10},  // 12单体最低电压float
 	{12, 13, _U_SHORT_, 2, 2, 1}, // 13运行状态 u16
 	{13, 14, _U_SHORT_, 2, 2, 1}  // 14需求
 };
@@ -74,7 +74,7 @@ int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
 			{
 				float temp_f;
 				temp_f = (float)(pdata[bms_SendTo61850_Tab[i].pos_protocol * 2] * 256 + pdata[bms_SendTo61850_Tab[i].pos_protocol * 2 + 1]);
-				temp_f/=bms_SendTo61850_Tab[i].precision;
+				temp_f /= bms_SendTo61850_Tab[i].precision;
 				*(float *)&senddata.data_info[i].data = temp_f;
 			}
 			else if (bms_SendTo61850_Tab[i].el_tag == _U_SHORT_)
@@ -89,7 +89,6 @@ int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
 	ret = sendtotask(&senddata);
 	return ret;
 }
-
 
 static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 {
@@ -127,7 +126,7 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 		printf("不该出现！！！！flag_recv=0x%2x pcsid=%d\n", flag_recv, pcsid);
 	Ave_Max_PW = sum_Bams_MX_PW / total_pcsnum;
 	Ave_Max_DPW = sum_Bams_MX_DPW / total_pcsnum;
-	if (flag_recv == g_flag_RecvNeed)
+	if (flag_recv == g_flag_RecvNeed_PCS)
 	{
 
 		senddata.data_info[0].sAddr.portID = 1;
@@ -197,7 +196,7 @@ int recvfromBams_ems(unsigned char pcsid, unsigned char type, void *pdata)
 		static unsigned int flag_recv_bms[] = {0, 0};
 		bms_data = *(BmsData *)pdata;
 		unsigned char *p = bms_data.buf_data;
-		int num_pcs1, num_pcs2, num_pcs;	
+		int num_pcs1, num_pcs2, num_pcs;
 
 		flag_recv_bms[bms_data.bmsid] |= (1 << pcsid);
 		if (bms_data.bmsid == 0)
@@ -214,8 +213,8 @@ int recvfromBams_ems(unsigned char pcsid, unsigned char type, void *pdata)
 		}
 
 		myprintbuf(bms_data.lendata, bms_data.buf_data);
-        num_pcs = num_pcs1 + num_pcs2;
-		printf("61850接口收到来自bms数据 recvfromBams_ems pcsid=%d num_pcs=%d\n",pcsid,num_pcs);
+		num_pcs = num_pcs1 + num_pcs2;
+		printf("61850接口收到来自bms数据 recvfromBams_ems pcsid=%d num_pcs=%d\n", pcsid, num_pcs);
 		// if(num_pcs>=total_pcsnum)
 		//    countSumAve_Send(bms_data.buf_data);
 	}
@@ -237,13 +236,13 @@ void subscribeFromBams(void)
 
 	void *handle;
 	char *error;
-	static int yy=0;
+	static int yy = 0;
 #define LIB_BAMS_PATH "/usr/lib/libbams_rtu.so"
 	typedef int (*outBmsData2Other)(unsigned char, unsigned char, void *); //输出数据
 	typedef int (*in_fun)(unsigned char type, outBmsData2Other pfun);	   //命令处理函数指针
 	in_fun my_func = NULL;
 
-	printf("61850打开动态链接库 /usr/lib/libbams_rtu.so yy=%d\n",yy++);
+	printf("61850打开动态链接库 /usr/lib/libbams_rtu.so yy=%d\n", yy++);
 
 	handle = dlopen(LIB_BAMS_PATH, RTLD_LAZY);
 	if (!handle)
