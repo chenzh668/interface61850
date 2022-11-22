@@ -6,6 +6,7 @@
 		"writepcs.h": "c",
 		"withlcd.h": "c",
 		"withbams.h": "c",
-		"interface.h": "c"
+		"interface.h": "c",
+		"withplc.h": "c"
 	}
 }

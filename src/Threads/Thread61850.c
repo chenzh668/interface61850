@@ -14,6 +14,7 @@
 #include "IEC61850_type.h"
 #include "withLCD.h"
 #include "withBAMS.h"
+#include "withPLC.h"
 static iec61850_shm_packet_t *shm_addr; /* 共享内存区的首地址指针, 也是iec61850_shm_data_t的指针 */
 // static int semid;
 
@@ -346,6 +347,7 @@ void CreateThreads(void *para)
 	g_lcd_qmegid = os_create_msgqueue(&key, 1);
      subscribeFromLcd();
 	subscribeFromBams();
+	subscribeFromPlc();
 	printf("thread_61850 CREATE success!\n");
 }
 

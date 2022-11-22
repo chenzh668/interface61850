@@ -346,7 +346,7 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 	{
 
 		senddata.data_info[i].sAddr.portID = 3;
-		senddata.data_info[i].sAddr.devID = temp.lcdid*6+temp.pcsid;
+		senddata.data_info[i].sAddr.devID = temp.lcdid * 6 + temp.pcsid;
 		senddata.data_info[i].sAddr.typeID = 2;
 		senddata.data_info[i].data_size = 2;
 		senddata.data_info[i].el_tag = _U_SHORT_;
@@ -388,7 +388,7 @@ int recvfromlcd(unsigned char type, void *pdata)
 		if (flag_recv == g_flag_RecvNeed_PCS) //上传平均值和总和值
 		{
 			printf("上传平均值或总和值 flag_recv=%x\n", flag_recv);
-		    countSumAve_yc_Send();
+			countSumAve_yc_Send();
 			flag_recv = 0;
 		}
 	}
@@ -443,115 +443,6 @@ int recvfromlcd(unsigned char type, void *pdata)
 	return 0;
 }
 
-void handleRecvFrom61850(data_info_t *pdata)
-{
-	data_info_t temp = *(data_info_t *)pdata;
-	int k;
-	int type = 0;
-	//	int item = 0;
-	YK_PARA para;
-
-	printf("FromEMS数据标识 %d %d %d %d\n", temp.sAddr.portID, temp.sAddr.devID, temp.sAddr.typeID, temp.sAddr.pointID);
-	para.el_tag = temp.el_tag;
-	switch (temp.el_tag)
-	{
-	case _INT_:
-	{
-		int tem;
-		tem = *(int *)temp.data;
-		*(int *)para.data = tem;
-
-		printf("收到整形数=%d\n", tem);
-	}
-
-	break;
-	case _FLOAT_:
-	{
-		float tem;
-		tem = *(float *)temp.data;
-		*(float *)para.data = tem;
-		printf("收到浮点数=%f\n", tem);
-	}
-
-	break;
-	case _BOOL_:
-	{
-		printf("11收到BOOL数据 %x\n", temp.data[0]);
-		para.data[0] = temp.data[0];
-	}
-	break;
-	default:
-		return;
-	}
-
-	if (temp.sAddr.portID == 1 && (temp.sAddr.typeID == 1 || temp.sAddr.typeID == 9))
-	{
-		k = 1;
-		type = _BMS_YX_;
-		if (temp.sAddr.pointID == 0 && temp.sAddr.devID == 1 && temp.sAddr.typeID == 9)
-		{
-			printf("从EMS获得EMS通信状态");
-			para.item = EMS_communication_status; // EMS通信状态
-		}
-		else if (temp.sAddr.typeID == 9 && temp.sAddr.devID == 0)
-		{
-			if (temp.sAddr.pointID == 0)
-				para.item = one_FM_GOOSE_link_status_A; //一次调频A网GOOSE链路状态
-			else if (temp.sAddr.pointID == 1)
-				para.item = one_FM_GOOSE_link_status_B; //一次调频B网GOOSE链路状态
-		}
-
-		else if (temp.sAddr.typeID == 1)
-		{
-			if (temp.sAddr.pointID == 1)
-				para.item = one_FM_Enable; //一次调频使能
-			else if (temp.sAddr.pointID == 2)
-				para.item = one_FM_Disable; //一次调频切除
-		}
-	}
-	else if (temp.sAddr.portID == 1 && temp.sAddr.devID == 1 && temp.sAddr.typeID == 5)
-	{
-		k = 2;
-		type = _BMS_YK_;
-
-		para.item = temp.sAddr.pointID;
-		printf("EMS遥控要求！！！para.item=%d k=%d\n", para.item, k);
-	}
-	else if (temp.sAddr.portID == 1 && temp.sAddr.typeID == 6)
-	{
-		type = _BMS_YK_;
-		if (temp.sAddr.devID == 1)
-		{
-			if (temp.sAddr.pointID == 1)
-				para.item = EMS_PW_SETTING;
-			else if (temp.sAddr.pointID == 2)
-				para.item = EMS_QW_SETTING;
-		}
-		else if (temp.sAddr.devID == 0)
-		{
-			if (temp.sAddr.pointID == 1)
-				para.item = ONE_FM_PW_SETTING;
-			else if (temp.sAddr.pointID == 2)
-				para.item = ONE_FM_QW_SETTING;
-		}
-	}
-	else if (temp.sAddr.portID == 3 && temp.sAddr.typeID == 5 && temp.sAddr.pointID == 1)
-	{
-		type = _PCS_YK_;
-		para.item = temp.sAddr.devID;
-		para.el_tag = temp.el_tag;
-		para.data[0] = temp.data[0];
-	}
-
-	if (ykOrder_61850 != NULL)
-	{
-		printf("111testCallYK 61850\n");
-		if (type == _BMS_YX_)
-			ykOrder_61850(type, &para, NULL);
-		else
-			ykOrder_61850(type, &para, backYkFromLce);
-	}
-}
 // typedef int (*CallbackYK)(unsigned char, void *pdata);			  //遥控回调函数签名
 
 // typedef int (*yk_fun)(unsigned char, YK_PARA *, CallbackYK pfun); //命令处理函数指针
@@ -596,12 +487,4 @@ void subscribeFromLcd(void)
 	my_func(_YC_, recvfromlcd);
 	my_func(_YX_, recvfromlcd);
 	// my_func(_ZJYC_, recvfromlcd);
-}
-
-int backYkFromLce(unsigned char type, void *pdata)
-{
-	int xx;
-	xx = *(int *)pdata;
-	printf("61850接口模块收到 backYkFromLce type=%d xx=%d\n", type, xx);
-	return 0;
 }
