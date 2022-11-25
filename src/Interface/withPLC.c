@@ -18,7 +18,8 @@ int recvfromplc(unsigned char type, void *pdata)
 	printf("61850接口模块收到 backYkFromLce type=%d data=%x\n", type, temp);
 	// if (temp_last != temp)
 	{
-		for (i = 0; i < (PLC_EMU_CSTART+1); i++)
+		// for (i = 0; i < (PLC_EMU_CSTART+1); i++)
+		for (i = 0; i < (PLC_EMU_TRANSFORMER_ROOM_OPEN+1); i++)
 		{
 			senddata.data_info[i].sAddr.portID = INFO_PLC;
 			senddata.data_info[i].sAddr.devID = 1;
@@ -30,14 +31,41 @@ int recvfromplc(unsigned char type, void *pdata)
 			}
 			else
 			{
-				if ((temp & (1 << i)) > 0)
+				if (i >= 7)
 				{
-					senddata.data_info[i].data[0] = 1;
+					if (i == 7)
+					{
+						if ((temp & (1 << i)) > 0)
+						{
+							senddata.data_info[10].data[0] = 1;
+						}
+						else
+						{
+							senddata.data_info[10].data[0] = 0;
+						}
+					}
+					else
+					{
+						if ((temp & (1 << i)) > 0)
+						{
+							senddata.data_info[i - 1].data[0] = 1;
+						}
+						else
+						{
+							senddata.data_info[i - 1].data[0] = 0;
+						}
+					}
+				}else{
+					if ((temp & (1 << i)) > 0)
+					{
+						senddata.data_info[i].data[0] = 1;
+					}
+					else
+					{
+						senddata.data_info[i].data[0] = 0;
+					}	
 				}
-				else
-				{
-					senddata.data_info[i].data[0] = 0;
-				}
+				
 			}
 
 			senddata.data_info[i].data_size = 1;
