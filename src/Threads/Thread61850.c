@@ -87,14 +87,22 @@ void *thread_61850_read(void *arg)
 	struct timespec waittime;
 	struct timeval nowtime;
 	key_t key1 = ftok(IEC61850_IPC_PATH, IEC61850_IPC_KEY);
-	int shmid = shmget(key1, 0, 0);
-	if (shmid == -1)
+	int shmid = -1;//shmget(key1, 0, 0);
+	while (shmid == -1)
 	{
+		shmid = shmget(key1, 0, 0);
+		if(shmid==0)
+			break;
 		sleep(1);
 		printf("thread_61850_read shmid == -1\n");
-		return NULL;
-		// continue;
 	}
+		// if (shmid == -1)
+		// {
+		// 	sleep(1);
+		// 	printf("thread_61850_read shmid == -1\n");
+		// 	return NULL;
+		// 	// continue;
+		// }
 
 	printf("shmget ok!\n");
 
