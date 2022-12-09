@@ -110,8 +110,6 @@ extern YKOrder ykOrder_61850;
 extern YKOrder ykOrder_61850_plc;
 extern PARA_61850 *pFrome61850;
 extern int total_pcsnum;
-extern int g_flag_RecvNeed_PCS;
-extern int g_flag_RecvNeed_LCD;
 extern float Ave_Max_PW;
 extern float Ave_Max_DPW;
 int sendtotask(MyData *senddata);

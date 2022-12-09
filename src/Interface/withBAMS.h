@@ -18,11 +18,10 @@
 #define BMS_SYS_STATUS 12					 //电池分系统 n 状态0-初始化 1-停机 2-启动中 3-运行 4-待机 5-故障 9-关机 255-调试
 #define BMS_SYS_NEED 13						 //电池分系统 n 需求 0-禁充禁放(PCS禁止充电放电, PCS应停机或封脉冲) 1-只能充电（PCS禁止放电） 2-只能放电（PCS禁止充电） 3-可充可放（正常）
 #define BMS_FAULT_STATUS 14					 //电池分系统 n 总故障状态
-
 typedef struct
 {
 	unsigned char bmsid;
-	unsigned char pcsid;
+	unsigned char pcsid_bms;
 	unsigned char lendata;		 //收到的数据长度
 	unsigned char buf_data[256]; //收到的数据部分
 

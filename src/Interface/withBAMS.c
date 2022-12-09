@@ -73,9 +73,21 @@ int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
 			if (bms_SendTo61850_Tab[i].el_tag == _FLOAT_)
 			{
 				float temp_f;
-				temp_f = (float)(pdata[bms_SendTo61850_Tab[i].pos_protocol * 2] * 256 + pdata[bms_SendTo61850_Tab[i].pos_protocol * 2 + 1]);
+				//unsigned short xxx;
+				short yyy;
+				// xxx=pdata[bms_SendTo61850_Tab[i].pos_protocol * 2] * 256 + pdata[bms_SendTo61850_Tab[i].pos_protocol * 2 + 1];
+                // yyy=(xxx/256)*256+xxx%256;
+				// temp_f = (float)(yyy);
+				yyy = pdata[bms_SendTo61850_Tab[i].pos_protocol * 2] * 256 + pdata[bms_SendTo61850_Tab[i].pos_protocol * 2 + 1];
+		        temp_f = (float)(yyy);
+				if(bms_SendTo61850_Tab[i].pos_protocol==6)
+				{
+					printf("111解析出的电池总电流 %x %x %d %hx %f\n",pdata[bms_SendTo61850_Tab[i].pos_protocol * 2],pdata[bms_SendTo61850_Tab[i].pos_protocol * 2+1],yyy,yyy,temp_f);
+					
+				}
 				temp_f /= bms_SendTo61850_Tab[i].precision;
 				*(float *)&senddata.data_info[i].data = temp_f;
+
 			}
 			else if (bms_SendTo61850_Tab[i].el_tag == _U_SHORT_)
 			{
@@ -95,7 +107,7 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 	static float sum_Bams_MX_DPW = 0;
 	static float sum_Bams_MX_PW = 0;
 	static float sum_Bams_Soc = 0;
-	static unsigned int sum_errpcs_num = 0;
+	static int sum_errpcs_num = 0;
 	static int flag_recv = 0;
 	MyData senddata;
 	int ret = 0xff;
@@ -126,7 +138,7 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 		printf("不该出现！！！！flag_recv=0x%2x pcsid=%d\n", flag_recv, pcsid);
 	Ave_Max_PW = sum_Bams_MX_PW / total_pcsnum;
 	Ave_Max_DPW = sum_Bams_MX_DPW / total_pcsnum;
-	if (flag_recv == g_flag_RecvNeed_PCS)
+	//if (flag_recv == g_flag_RecvNeed_PCS)
 	{
 
 		senddata.data_info[0].sAddr.portID = 1;
@@ -185,6 +197,55 @@ int countPcsNum_Bms(unsigned int flag_recv)
 	}
 	return num_pcs;
 }
+
+// int recvfromBams_ems(unsigned char pcsid_bms, unsigned char type, void *pdata)
+// {
+// 	int i;
+// 	switch (type)
+// 	{
+// 	case _ALL_:
+// 	{
+// 		static unsigned int flag_recv_bms[] = {0, 0};
+// 		int num_pcs1, num_pcs2, num_pcs;
+// 		BmsData temp = *(BmsData *)pdata;
+// 		unsigned char bmsid = temp.bmsid;
+// 	    flag_recv_bms[bmsid] |= (1 << pcsid_bms);
+// 		if (bms_data.bmsid == 0)
+// 		{
+
+// 			BamsTo61850(pcsid, p);
+// 			num_pcs1 = countPcsNum_Bms(flag_recv_bms[0]);
+// 		}
+// 		else
+// 		{
+
+// 			BamsTo61850(pcsid + 18, p);
+// 			num_pcs2 = (flag_recv_bms[1]);
+// 		}
+
+// 		myprintbuf(bms_data.lendata, bms_data.buf_data);
+// 		num_pcs = num_pcs1 + num_pcs2;
+// 		printf("61850接口收到来自bms数据 recvfromBams_ems pcsid=%d num_pcs=%d\n", pcsid, num_pcs);
+// 		if(num_pcs>=total_pcsnum)
+// 		{
+
+// 			flag_recv_bms[0] = 0;
+// 			flag_recv_bms[1] = 0;
+// 		   countSumAve_Send(bms_data.buf_data);
+
+// 	}
+// 	break;
+// 	case _SOC_:
+// 	{
+// 		short soc = *(short *)pdata;
+// 		printf("收到BAMS传来的soc数据！pcsid=%d soc=%d\n", pcsid, soc);
+// 	}
+// 	break;
+// 	default:
+// 		break;
+// 	}
+// 	return 0;
+// }
 int recvfromBams_ems(unsigned char pcsid, unsigned char type, void *pdata)
 {
 
@@ -198,25 +259,34 @@ int recvfromBams_ems(unsigned char pcsid, unsigned char type, void *pdata)
 		unsigned char *p = bms_data.buf_data;
 		int num_pcs1, num_pcs2, num_pcs;
 
-		flag_recv_bms[bms_data.bmsid] |= (1 << pcsid);
 		if (bms_data.bmsid == 0)
 		{
 
 			BamsTo61850(pcsid, p);
-			num_pcs1 = countPcsNum_Bms(flag_recv_bms[0]);
+		    flag_recv_bms[0] |= (1 << pcsid);
+	
 		}
-		else
+		else if(bms_data.bmsid == 1)
 		{
 
 			BamsTo61850(pcsid + 18, p);
-			num_pcs2 = (flag_recv_bms[1]);
-		}
+			flag_recv_bms[1] |= (1 << pcsid);
 
+		}
+        else
+		    printf("recvfromBams_ems 出错！bms_data.bmsid=%d\n",bms_data.bmsid);
+		num_pcs1 = countPcsNum_Bms(flag_recv_bms[0]);
+		num_pcs2 = countPcsNum_Bms(flag_recv_bms[1]);
 		myprintbuf(bms_data.lendata, bms_data.buf_data);
 		num_pcs = num_pcs1 + num_pcs2;
-		printf("61850接口收到来自bms数据 recvfromBams_ems pcsid=%d num_pcs=%d\n", pcsid, num_pcs);
-		// if(num_pcs>=total_pcsnum)
-		//    countSumAve_Send(bms_data.buf_data);
+		printf("61850接口收到来自bms数据 recvfromBams_ems bmsid=%d  pcsid=%d num_pcs=%d num_pcs1=%d num_pcs2=%d\n",bms_data.bmsid, pcsid, num_pcs,num_pcs1,num_pcs2);
+		if(num_pcs>=total_pcsnum)
+		{
+			flag_recv_bms[0]=0;
+			flag_recv_bms[1]=0;
+			//countSumAve_Send(bms_data.buf_data);
+		}
+		//    
 	}
 	break;
 	case _SOC_:

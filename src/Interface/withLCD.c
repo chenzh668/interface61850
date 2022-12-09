@@ -12,7 +12,7 @@ LCD_YC_YX_DATA yc_data[MAX_TOTAL_PCS_NUM];
 LCD_YC_YX_DATA zjyc_data[MAX_LCD_NUM];
 // short Yc_PW_Data[MAX_TOTAL_PCS_NUM];//
 unsigned int Yx_Pcs_Status = 0;
-
+unsigned char flag_RecvNeed_PCS[]={0,0,0,0,0,0};
 PARA_61850 Frome61850;
 PARA_61850 *pFrome61850 = (PARA_61850 *)&Frome61850;
 
@@ -374,9 +374,12 @@ int recvfromlcd(unsigned char type, void *pdata)
 	{
 		// int Apparent_power;
 		LCD_YC_YX_DATA temp;
-		static unsigned int flag_recv = 0;
+	    static unsigned char flag_recv_pcs[] = {0, 0, 0, 0, 0, 0};
+	    static int flag_recv_lcd = 0;
 		temp = *(LCD_YC_YX_DATA *)pdata;
 		yc_data[temp.sn] = temp;
+
+
 		printf("收到遥测数据  sn=%d  lcdid=%d  pcsid_lcd=%d\n", temp.sn, temp.lcdid, temp.pcsid);
 		// Apparent_power=Yc_PW_Data[temp.sn-1];
 		// if (pcs_fault_flag[temp.sn] == 0)
@@ -384,13 +387,27 @@ int recvfromlcd(unsigned char type, void *pdata)
 			LcdTo61850_YC(temp.lcdid, temp.pcsid, temp.pcs_data);
 			// fun_realtime//上传实时数据
 		}
-		flag_recv |= (1 << temp.sn);
-		if (flag_recv == g_flag_RecvNeed_PCS) //上传平均值和总和值
+	flag_recv_pcs[temp.lcdid] |= (1 << (temp.pcsid - 1));
+
+	if (flag_recv_pcs[temp.lcdid] == flag_RecvNeed_PCS[temp.lcdid])
 		{
-			printf("上传平均值或总和值 flag_recv=%x\n", flag_recv);
-			countSumAve_yc_Send();
-			flag_recv = 0;
+
+		flag_recv_lcd |= (1 << temp.lcdid);
+		flag_recv_pcs[temp.lcdid] = 0;
+
+
 		}
+
+	if (flag_recv_lcd == pFrome61850->flag_RecvNeed_LCD)//上传平均值和总和值
+	{
+
+
+					printf("上传平均值或总和值 flag_recv=%x\n", flag_recv_lcd);
+			countSumAve_yc_Send();
+		flag_recv_lcd = 0;
+	}
+
+
 	}
 	break;
 	case _YX_:
@@ -425,9 +442,9 @@ int recvfromlcd(unsigned char type, void *pdata)
 		temp = *(LCD_YC_YX_DATA *)pdata;
 		flag_recv |= (1 << (temp.lcdid - 1));
 		zjyc_data[temp.lcdid - 1] = temp;
-		if (flag_recv == g_flag_RecvNeed_LCD)
-		{
-		}
+		// if (flag_recv == g_flag_RecvNeed_LCD)
+		// {
+		// }
 
 		printf("接收到整机遥测！！！！\n");
 	}

@@ -87,29 +87,29 @@ void *thread_61850_read(void *arg)
 	struct timespec waittime;
 	struct timeval nowtime;
 	key_t key1 = ftok(IEC61850_IPC_PATH, IEC61850_IPC_KEY);
-	int shmid = -1;//shmget(key1, 0, 0);
-    printf("thread_61850_read start\n");
+	int shmid = -1; // shmget(key1, 0, 0);
+	printf("thread_61850_read start\n");
 
 	while (shmid == -1)
 	{
 		shmid = shmget(key1, 0, 0);
-		if(shmid==0)
+		if (shmid == 0)
 			break;
 		sleep(1);
-		printf("thread_61850_read shmid =%d\n",shmid);
+		printf("thread_61850_read shmid =%d\n", shmid);
 	}
-		// if (shmid == -1)
-		// {
-		// 	sleep(1);
-		// 	printf("thread_61850_read shmid == -1\n");
-		// 	return NULL;
-		// 	// continue;
-		// }
+	// if (shmid == -1)
+	// {
+	// 	sleep(1);
+	// 	printf("thread_61850_read shmid == -1\n");
+	// 	return NULL;
+	// 	// continue;
+	// }
 
 	printf("shmget ok!\n");
 
-	//挂接共享内存
-	// struct _iec61850_shm_packet *p_iec61850_shm_packet =(struct _iec61850_shm_packet *)shmat(shmid,0,0);
+	// 挂接共享内存
+	//  struct _iec61850_shm_packet *p_iec61850_shm_packet =(struct _iec61850_shm_packet *)shmat(shmid,0,0);
 	shm_addr = (iec61850_shm_packet_t *)shmat(shmid, 0, 0);
 	if (shm_addr == NULL)
 	{
@@ -210,10 +210,10 @@ void sendParaLcd(void)
 	printf("发送的数据 f %f %f \n", temp, *(float *)shm_addr->shm_que1.slist[i].data);
 	shm_addr->shm_que1.slist[i].el_tag = _FLOAT_;
 
-	//每个LCD通信状态，PCS个数
+	// 每个LCD通信状态，PCS个数
 	for (j = 0; j < pFrome61850->lcdnum; j++)
 	{
-		//通信状态，初始设置为通信正常
+		// 通信状态，初始设置为通信正常
 		i = shm_addr->shm_que1.wpos;
 
 		shm_addr->shm_que1.wpos = (shm_addr->shm_que1.wpos + 1) % data_num;
@@ -222,10 +222,10 @@ void sendParaLcd(void)
 		shm_addr->shm_que1.slist[i].sAddr.typeID = 2;
 		shm_addr->shm_que1.slist[i].sAddr.pointID = 0;
 		shm_addr->shm_que1.slist[i].data_size = 1;
-		shm_addr->shm_que1.slist[i].data[0] = 1; //通信正常
+		shm_addr->shm_que1.slist[i].data[0] = 1; // 通信正常
 
 		shm_addr->shm_que1.slist[i].el_tag = _BOOL_;
-		//每个LCD下的PCS个数
+		// 每个LCD下的PCS个数
 		i = shm_addr->shm_que1.wpos;
 		shm_addr->shm_que1.wpos = (shm_addr->shm_que1.wpos + 1) % data_num;
 
@@ -263,7 +263,7 @@ void *thread_61850_write(void *arg)
 		sleep(1);
 	}
 
-	//发送参数
+	// 发送参数
 	sem_wait(mutex1_lock);
 	sendParaLcd();
 	sem_post(mutex1_lock);
@@ -332,6 +332,10 @@ void CreateThreads(void *para)
 	for (i = 0; i < pFrome61850->lcdnum; i++)
 	{
 		total_pcsnum += pFrome61850->pcsnum[i];
+		if ((pFrome61850->flag_RecvNeed_LCD & (1 << i)) !=0)
+		{
+			flag_RecvNeed_PCS[i] = countRecvFlag(pFrome61850->pcsnum[i]);
+		}
 	}
 	for (i = 0; i < total_pcsnum; i++)
 	{
@@ -339,23 +343,22 @@ void CreateThreads(void *para)
 	}
 	if (total_pcsnum > 36)
 		total_pcsnum = 36;
-	g_flag_RecvNeed_PCS = countRecvFlag(total_pcsnum);
-	g_flag_RecvNeed_LCD = countRecvFlag(pFrome61850->lcdnum);
-	printf("61850从主程序获得的参数 %d  %d total_pcs=%d  flagneed=%x\n", pFrome61850->lcdnum, pFrome61850->balance_rate, total_pcsnum, g_flag_RecvNeed_PCS);
+
+	printf("61850从主程序获得的参数 %d  %d total_pcs=%d\n", pFrome61850->lcdnum, pFrome61850->balance_rate, total_pcsnum);
 
 	if (FAIL == CreateSettingThread(&ThreadID, &Thread_attr, (void *)thread_61850_read, NULL, 1, 1))
 	{
 		printf(" thread_61850_read CREATE ERR!\n");
-		//exit(1);
+		// exit(1);
 	}
 	if (FAIL == CreateSettingThread(&ThreadID, &Thread_attr, (void *)thread_61850_write, NULL, 1, 1))
 	{
 		printf(" thread_61850_write CREATE ERR!\n");
-		//exit(1);
+		// exit(1);
 	}
 
 	g_lcd_qmegid = os_create_msgqueue(&key, 1);
-     subscribeFromLcd();
+	subscribeFromLcd();
 	subscribeFromBams();
 	subscribeFromPlc();
 	printf("thread_61850 CREATE success!\n");

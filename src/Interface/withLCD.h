@@ -31,7 +31,7 @@ typedef struct
 } YX_SEND_FLAG; //
 
 extern unsigned char pcs_fault_flag[];
-
+extern unsigned char flag_RecvNeed_PCS[];
 void subscribeFromLcd(void);
 
 #endif

@@ -6,8 +6,8 @@
 #include <sys/msg.h>
 #include <stdio.h>
 int total_pcsnum = 0;
-int g_flag_RecvNeed_PCS = 0;
-int g_flag_RecvNeed_LCD = 0;
+//int g_flag_RecvNeed_PCS = 0;
+//int g_flag_RecvNeed_LCD = 0;
 float Ave_Max_PW = 0;
 float Ave_Max_DPW = 0;
 int sendtotask(MyData *senddata)
