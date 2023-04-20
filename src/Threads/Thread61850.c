@@ -185,10 +185,10 @@ void sendParaLcd(void)
 	i = shm_addr->shm_que1.wpos;
 	// pcs总数
 	shm_addr->shm_que1.wpos++;
-	shm_addr->shm_que1.slist[i].sAddr.portID = 1;
-	shm_addr->shm_que1.slist[i].sAddr.devID = 1;
-	shm_addr->shm_que1.slist[i].sAddr.typeID = 2;
-	shm_addr->shm_que1.slist[i].sAddr.pointID = 0;
+	shm_addr->shm_que1.slist[i].sAddr.portID = 1; //数据标识1
+	shm_addr->shm_que1.slist[i].sAddr.devID = 1;//数据标识2
+	shm_addr->shm_que1.slist[i].sAddr.typeID = 2;//数据标识3
+	shm_addr->shm_que1.slist[i].sAddr.pointID = 0;//数据标识4
 
 	shm_addr->shm_que1.slist[i].data_size = 4;
 	*(int *)shm_addr->shm_que1.slist[i].data = total_pcsnum;
@@ -196,6 +196,7 @@ void sendParaLcd(void)
 	printf("发送的数据 d %d %d \n", total_pcsnum, *(int *)shm_addr->shm_que1.slist[i].data);
 	shm_addr->shm_que1.slist[i].el_tag = _INT_;
 
+	//均衡速度
 	i = shm_addr->shm_que1.wpos;
 	temp = ((float)pFrome61850->balance_rate) / 100;
 	shm_addr->shm_que1.wpos++;
@@ -219,7 +220,7 @@ void sendParaLcd(void)
 		shm_addr->shm_que1.wpos = (shm_addr->shm_que1.wpos + 1) % data_num;
 		shm_addr->shm_que1.slist[i].sAddr.portID = 2;
 		shm_addr->shm_que1.slist[i].sAddr.devID = j;
-		shm_addr->shm_que1.slist[i].sAddr.typeID = 2;
+		shm_addr->shm_que1.slist[i].sAddr.typeID = 1;
 		shm_addr->shm_que1.slist[i].sAddr.pointID = 0;
 		shm_addr->shm_que1.slist[i].data_size = 1;
 		shm_addr->shm_que1.slist[i].data[0] = 1; // 通信正常

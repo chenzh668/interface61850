@@ -26,23 +26,42 @@
 // 3通讯中断（） bool        0
 // 15总故障状态  bool        1
 
-SendTo61850 bms_SendTo61850_Tab[] = {
+// SendTo61850 bms_SendTo61850_Tab[] = {
 
-	{2, 0, _BOOL_, 1, 1, 1},
-	{14, 1, _BOOL_, 1, 1, 1},
-	{0, 2, _FLOAT_, 4, 2, 10},	  // 1最大允许充电 功率 float
-	{1, 3, _FLOAT_, 4, 2, 10},	  // 2最大允许放电 功率 float
-	{3, 4, _FLOAT_, 4, 2, 10},	  // 4总电压  float
-	{4, 5, _FLOAT_, 4, 2, 1000},  // 5最大允许充电 电流float
-	{5, 6, _FLOAT_, 4, 2, 1000},  // 6最大允许放电 电流float
-	{6, 7, _FLOAT_, 4, 2, 1000},  // 7电池总电流float
-	{7, 8, _FLOAT_, 4, 2, 10},	  // 8电池 SOC float
-	{8, 9, _FLOAT_, 4, 2, 10},	  // 9电池剩余可充 电量float
-	{9, 10, _FLOAT_, 4, 2, 10},	  // 10电池剩余可放 电量float
-	{10, 11, _FLOAT_, 4, 2, 10},  // 11单体最高电压float
-	{11, 12, _FLOAT_, 4, 2, 10},  // 12单体最低电压float
-	{12, 13, _U_SHORT_, 2, 2, 1}, // 13运行状态 u16
-	{13, 14, _U_SHORT_, 2, 2, 1}  // 14需求
+// 	{2, 0, _BOOL_, 1, 1, 1},
+// 	{14, 1, _BOOL_, 1, 1, 1},
+// 	{0, 2, _FLOAT_, 4, 2, 10},	  // 1最大允许充电 功率 float
+// 	{1, 3, _FLOAT_, 4, 2, 10},	  // 2最大允许放电 功率 float
+// 	{3, 4, _FLOAT_, 4, 2, 10},	  // 4总电压  float
+// 	{4, 5, _FLOAT_, 4, 2, 1000},  // 5最大允许充电 电流float
+// 	{5, 6, _FLOAT_, 4, 2, 1000},  // 6最大允许放电 电流float
+// 	{6, 7, _FLOAT_, 4, 2, 1000},  // 7电池总电流float
+// 	{7, 8, _FLOAT_, 4, 2, 10},	  // 8电池 SOC float
+// 	{8, 9, _FLOAT_, 4, 2, 10},	  // 9电池剩余可充 电量float
+// 	{9, 10, _FLOAT_, 4, 2, 10},	  // 10电池剩余可放 电量float
+// 	{10, 11, _FLOAT_, 4, 2, 10},  // 11单体最高电压float
+// 	{11, 12, _FLOAT_, 4, 2, 10},  // 12单体最低电压float
+// 	{12, 13, _U_SHORT_, 2, 2, 1}, // 13运行状态 u16
+// 	{13, 14, _U_SHORT_, 2, 2, 1}  // 14需求
+// };
+
+
+SendTo61850 bms_SendTo61850_Tab[] = {
+	{2, 0, _BOOL_, 1, 1, 1},   //3通讯中断
+	{14,1, _BOOL_, 1, 1, 1},  //15总故障状态
+	{0, 1, _FLOAT_, 4, 2, 1},	  // 1最大允许充电 功率 float
+	{1, 2, _FLOAT_, 4, 2, 1},	  // 2最大允许放电 功率 float
+	{3, 3, _FLOAT_, 4, 2, 10},	  // 4总电压  float
+	{4, 4, _FLOAT_, 4, 2, 10},  // 5最大允许充电 电流float
+	{5, 5, _FLOAT_, 4, 2, 10},  // 6最大允许放电 电流float
+	{6, 6, _FLOAT_, 4, 2, 10},  // 7电池总电流float
+	{7, 7, _FLOAT_, 4, 2, 1000},	  // 8电池 SOC float
+	{8, 8, _FLOAT_, 4, 2, 1},	  // 9电池剩余可充 电量float
+	{9, 9, _FLOAT_, 4, 2, 1},	  // 10电池剩余可放 电量float
+	{10, 10, _FLOAT_, 4, 2, 1000},  // 11单体最高电压float
+	{11, 11, _FLOAT_, 4, 2, 1000},  // 12单体最低电压float
+	{12, 12, _U_SHORT_, 2, 2, 1}, // 13运行状态 u16
+	{13, 13, _U_SHORT_, 2, 2, 1}  // 14需求
 };
 
 int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
@@ -91,9 +110,8 @@ int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
 			}
 			else if (bms_SendTo61850_Tab[i].el_tag == _U_SHORT_)
 			{
-
-				senddata.data_info[i].data[0] = pdata[bms_SendTo61850_Tab[i].pos_protocol * 2];
-				senddata.data_info[i].data[1] = pdata[bms_SendTo61850_Tab[i].pos_protocol * 2 + 1];
+				short short_data =  pdata[bms_SendTo61850_Tab[i].pos_protocol * 2] * 256 + pdata[bms_SendTo61850_Tab[i].pos_protocol * 2 + 1];	
+				*(unsigned short *)senddata.data_info[i].data = short_data;
 			}
 		}
 	}

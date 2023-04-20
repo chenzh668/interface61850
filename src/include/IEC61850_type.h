@@ -31,10 +31,10 @@
 
 typedef struct
 {
-	int portID; //1:EMU整机 2:LCD 3:PCS
-	int devID;
-	int typeID;
-	int pointID;
+	int portID; //1:EMU整机 2:LCD 3:PCS    //数据标识1
+	int devID;     //数据标识2
+	int typeID;    //数据表示3
+	int pointID;   //数据表示4
 }POINT_ADDR;
 
 typedef struct

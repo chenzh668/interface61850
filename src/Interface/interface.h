@@ -69,11 +69,11 @@ enum _DATA_TYP
 
 typedef struct
 {
-	int pos_protocol; //协议中的位置
-	int pointID;	  //共享内存中的编号
+	int pos_protocol; //协议中的位置            //
+	int pointID;	  //共享内存中的编号    	// 数据表示4
 	char el_tag;	  //数据类型
 	int data_size;
-	int typeID;
+	int typeID;                                //数据标识3
 	int precision; //数据精度
 } SendTo61850;	   //
 typedef struct

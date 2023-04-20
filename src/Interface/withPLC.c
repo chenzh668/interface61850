@@ -15,7 +15,7 @@ int recvfromplc(unsigned char type, void *pdata)
 	int ret = 0;
 	MyData senddata;
 	int i;
-	printf("61850接口模块收到 backYkFromLce type=%d data=%x\n", type, temp);
+	printf("61850接口模块收到 backYkFromLcd type=%d data=%x\n", type, temp);
 	// if (temp_last != temp)
 	{
 		// for (i = 0; i < (PLC_EMU_CSTART+1); i++)

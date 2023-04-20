@@ -124,8 +124,8 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 	{
 		senddata.data_info[i].sAddr.portID = INFO_PCS;
 		senddata.data_info[i].sAddr.devID = lcdid * 6 + pcsid;
-		senddata.data_info[i].sAddr.pointID = yc_realtime_tab[i].pointID;
 		senddata.data_info[i].sAddr.typeID = yc_realtime_tab[i].typeID;
+		senddata.data_info[i].sAddr.pointID = yc_realtime_tab[i].pointID;
 		senddata.data_info[i].data_size = yc_realtime_tab[i].data_size;
 		senddata.data_info[i].el_tag = yc_realtime_tab[i].el_tag;
 
@@ -402,7 +402,7 @@ int recvfromlcd(unsigned char type, void *pdata)
 	{
 
 
-					printf("上传平均值或总和值 flag_recv=%x\n", flag_recv_lcd);
+			printf("上传平均值或总和值 flag_recv=%x\n", flag_recv_lcd);
 			countSumAve_yc_Send();
 		flag_recv_lcd = 0;
 	}
