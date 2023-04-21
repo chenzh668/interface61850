@@ -125,7 +125,6 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 		senddata.data_info[i].sAddr.devID = lcdid * 6 + pcsid;
 		senddata.data_info[i].sAddr.typeID = yc_realtime_tab[i].typeID;
 		senddata.data_info[i].sAddr.pointID = yc_realtime_tab[i].pointID;
-		//printf("pcs数据标识4：%d i:%d\n",yc_realtime_tab[i].pointID,i);
 		senddata.data_info[i].data_size = yc_realtime_tab[i].data_size;
 		senddata.data_info[i].el_tag = yc_realtime_tab[i].el_tag;
 
@@ -137,6 +136,7 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 			temp = (float)temp_i / yc_realtime_tab[i].precision;
 			*(float *)&senddata.data_info[i].data = temp;
 		}
+		// printf("发给 61850 遥测 标识:%d %d %d %d data:%d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,temp.pcs_data[i]);
 	}
 	senddata.num = 11;
 	ret = sendtotask(&senddata);
@@ -341,8 +341,9 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 	int base = 12;
 	int ret;
 	printf("LcdTo61850_YX收到遥信数据  lcdid=%d  pcsid_lcd=%d sn=%d  \n", temp.lcdid, temp.pcsid, temp.sn);
+	printf("yx temp.data_len:%d \n",temp.data_len);
 
-	for (i = 0; i < temp.data_len; i++)
+	for (i = 0; i < temp.data_len/2; i++)
 	{
 		senddata.data_info[i].sAddr.portID = INFO_PCS;
 		senddata.data_info[i].sAddr.devID = temp.lcdid * 6 + temp.pcsid;
@@ -350,8 +351,9 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 		senddata.data_info[i].data_size = 2;
 		senddata.data_info[i].el_tag = _U_SHORT_;
 		senddata.data_info[i].sAddr.pointID = base + i;
-		senddata.data_info[i].data[0] = temp.pcs_data[i] / 256;
-		senddata.data_info[i].data[1] = temp.pcs_data[i] % 256;
+		*(unsigned short *)senddata.data_info[i].data = temp.pcs_data[i];
+		// printf("发给 61850 遥信 标识:%d %d %d %d data:%d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,temp.pcs_data[i]);
+
 	}
 	senddata.num = temp.data_len;
 	ret = sendtotask(&senddata);
@@ -365,6 +367,7 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 
 	return 0;
 }
+
 int recvfromlcd(unsigned char type, void *pdata)
 {
 	switch (type)

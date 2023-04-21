@@ -94,7 +94,7 @@ void handleRecvFrom61850(data_info_t *pdata)
 		return;
 	}
 
-	if (temp.sAddr.portID == 1 && (temp.sAddr.typeID == 1 || temp.sAddr.typeID == 9))
+	if (temp.sAddr.portID == INFO_EMU && (temp.sAddr.typeID == 1 || temp.sAddr.typeID == 9))
 	{
 		k = 1;
 		type = _BMS_YX_;
