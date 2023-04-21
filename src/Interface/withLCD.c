@@ -51,7 +51,6 @@ YX_SEND_FLAG yx_send_flag[] = {
 unsigned char pcs_fault_flag[MAX_TOTAL_PCS_NUM];
 
 SendTo61850 yc_realtime_tab[] = {
-
 	{Line_AB_voltage, 1, _FLOAT_, 4, 2, 10},
 	{Line_BC_voltage, 2, _FLOAT_, 4, 2, 10},
 	{Line_CA_voltage, 3, _FLOAT_, 4, 2, 10},
@@ -81,7 +80,7 @@ SendTo61850 zjyc_realtime_tab[] = {
 	{DC_power_input_zj, 19, _FLOAT_, 4, 2, 10}	 // 0x1076    "直流功率"	整机	int16	0.1 kW	R
 };
 SendTo61850_count yc_count_tab[] = {
-
+	
 	{Line_AB_voltage, 8, _FLOAT_, 4, 2, 10, 2},
 	{Line_BC_voltage, 9, _FLOAT_, 4, 2, 10, 2},
 	{Line_CA_voltage, 10, _FLOAT_, 4, 2, 10, 2},
@@ -126,6 +125,7 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 		senddata.data_info[i].sAddr.devID = lcdid * 6 + pcsid;
 		senddata.data_info[i].sAddr.typeID = yc_realtime_tab[i].typeID;
 		senddata.data_info[i].sAddr.pointID = yc_realtime_tab[i].pointID;
+		//printf("pcs数据标识4：%d i:%d\n",yc_realtime_tab[i].pointID,i);
 		senddata.data_info[i].data_size = yc_realtime_tab[i].data_size;
 		senddata.data_info[i].el_tag = yc_realtime_tab[i].el_tag;
 
@@ -179,7 +179,7 @@ static int countSumAve_zjyc_Send(void)
 			temp = (int)zjyc_data[i].pcs_data[zjyc_realtime_tab[i].pos_protocol];
 		}
 
-		senddata.data_info[i].sAddr.portID = 1;
+		senddata.data_info[i].sAddr.portID = INFO_EMU;
 		senddata.data_info[i].sAddr.devID = 1;
 		senddata.data_info[i].sAddr.typeID = 2;
 		senddata.data_info[i].data_size = 4;
@@ -247,7 +247,7 @@ static int countSumAve_yc_Send(void)
 	}
 	for (i = 0; i < n; i++)
 	{
-		senddata.data_info[i].sAddr.portID = 1;
+		senddata.data_info[i].sAddr.portID = INFO_EMU;
 		senddata.data_info[i].sAddr.devID = 1;
 		senddata.data_info[i].sAddr.typeID = 2;
 		senddata.data_info[i].data_size = yc_count_tab[i].data_size;
@@ -311,7 +311,7 @@ static int countSumAve_yc_Send1(void)
 	}
 	//	if(sum_dpw>0)
 	{
-		senddata.data_info[senddata.num].sAddr.portID = 1;
+		senddata.data_info[senddata.num].sAddr.portID = INFO_EMU;
 		senddata.data_info[senddata.num].sAddr.devID = 1;
 		senddata.data_info[senddata.num].sAddr.typeID = 2;
 		senddata.data_info[senddata.num].data_size = 4;
@@ -344,8 +344,7 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 
 	for (i = 0; i < temp.data_len; i++)
 	{
-
-		senddata.data_info[i].sAddr.portID = 3;
+		senddata.data_info[i].sAddr.portID = INFO_PCS;
 		senddata.data_info[i].sAddr.devID = temp.lcdid * 6 + temp.pcsid;
 		senddata.data_info[i].sAddr.typeID = 2;
 		senddata.data_info[i].data_size = 2;
@@ -387,27 +386,21 @@ int recvfromlcd(unsigned char type, void *pdata)
 			LcdTo61850_YC(temp.lcdid, temp.pcsid, temp.pcs_data);
 			// fun_realtime//上传实时数据
 		}
-	flag_recv_pcs[temp.lcdid] |= (1 << (temp.pcsid - 1));
+		flag_recv_pcs[temp.lcdid] |= (1 << (temp.pcsid - 1));
 
-	if (flag_recv_pcs[temp.lcdid] == flag_RecvNeed_PCS[temp.lcdid])
+		if (flag_recv_pcs[temp.lcdid] == flag_RecvNeed_PCS[temp.lcdid])
 		{
 
-		flag_recv_lcd |= (1 << temp.lcdid);
-		flag_recv_pcs[temp.lcdid] = 0;
-
-
+			flag_recv_lcd |= (1 << temp.lcdid);
+			flag_recv_pcs[temp.lcdid] = 0;
 		}
 
-	if (flag_recv_lcd == pFrome61850->flag_RecvNeed_LCD)//上传平均值和总和值
-	{
-
-
+		if (flag_recv_lcd == pFrome61850->flag_RecvNeed_LCD)//上传平均值和总和值
+		{
 			printf("上传平均值或总和值 flag_recv=%x\n", flag_recv_lcd);
 			countSumAve_yc_Send();
-		flag_recv_lcd = 0;
-	}
-
-
+			flag_recv_lcd = 0;
+		}
 	}
 	break;
 	case _YX_:

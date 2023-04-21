@@ -54,8 +54,8 @@ enum _PORTID
 	INFO_EMU = 1, // emu整机信息
 	INFO_LCD = 2, // emu下lcd信息
 	INFO_PCS = 3, // emu下lcd下pcs信息
-	INFO_PLC = 4,
-	INFO_BMS = 5,
+	INFO_PLC = 4, // plc信息
+	INFO_BMS = 5, // BAMS信息
 };
 //******************************************************
 // 3-bool, 5-int, 6-unsigned int,7-float

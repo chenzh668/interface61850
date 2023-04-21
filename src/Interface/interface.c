@@ -119,7 +119,7 @@ void handleRecvFrom61850(data_info_t *pdata)
 				para.item = one_FM_Disable; //一次调频切除
 		}
 	}
-	else if (temp.sAddr.portID == 1 && temp.sAddr.devID == 1 && temp.sAddr.typeID == 5)
+	else if (temp.sAddr.portID == INFO_EMU && temp.sAddr.devID == 1 && temp.sAddr.typeID == 5)
 	{
 		k = 2;
 		para.item = temp.sAddr.pointID;
@@ -130,7 +130,7 @@ void handleRecvFrom61850(data_info_t *pdata)
 
 		printf("EMS遥控要求！！！para.item=%d k=%d\n", para.item, k);
 	}
-	else if (temp.sAddr.portID == 1 && temp.sAddr.typeID == 6)
+	else if (temp.sAddr.portID == INFO_EMU && temp.sAddr.typeID == 6)
 	{
 		type = _BMS_YK_;
 		if (temp.sAddr.devID == 1)
@@ -148,7 +148,7 @@ void handleRecvFrom61850(data_info_t *pdata)
 				para.item = ONE_FM_QW_SETTING;
 		}
 	}
-	else if (temp.sAddr.portID == 3 && temp.sAddr.typeID == 5 && temp.sAddr.pointID == 1)
+	else if (temp.sAddr.portID == INFO_PCS && temp.sAddr.typeID == 5 && temp.sAddr.pointID == 1)
 	{
 		type = _PCS_YK_;
 		para.item = temp.sAddr.devID;

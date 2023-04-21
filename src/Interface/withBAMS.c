@@ -106,7 +106,6 @@ int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
 				}
 				temp_f /= bms_SendTo61850_Tab[i].precision;
 				*(float *)&senddata.data_info[i].data = temp_f;
-
 			}
 			else if (bms_SendTo61850_Tab[i].el_tag == _U_SHORT_)
 			{
@@ -159,7 +158,7 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 	//if (flag_recv == g_flag_RecvNeed_PCS)
 	{
 
-		senddata.data_info[0].sAddr.portID = 1;
+		senddata.data_info[0].sAddr.portID = INFO_EMU;
 		senddata.data_info[0].sAddr.devID = 1;
 		senddata.data_info[0].sAddr.typeID = 2;
 		senddata.data_info[0].data_size = 4;
@@ -167,7 +166,7 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 		senddata.data_info[0].sAddr.pointID = 2;
 		*(float *)&senddata.data_info[0].data[0] = sum_Bams_MX_PW;
 
-		senddata.data_info[1].sAddr.portID = 1;
+		senddata.data_info[1].sAddr.portID = INFO_EMU;
 		senddata.data_info[1].sAddr.devID = 1;
 		senddata.data_info[1].sAddr.typeID = 2;
 		senddata.data_info[1].data_size = 4;
@@ -175,7 +174,7 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 		senddata.data_info[1].sAddr.pointID = 3;
 		*(float *)&senddata.data_info[1].data = sum_Bams_MX_DPW;
 
-		senddata.data_info[2].sAddr.portID = 1;
+		senddata.data_info[2].sAddr.portID = INFO_EMU;
 		senddata.data_info[2].sAddr.devID = 1;
 		senddata.data_info[2].sAddr.typeID = 2;
 		senddata.data_info[2].data_size = 4;
@@ -183,7 +182,7 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 		senddata.data_info[2].sAddr.pointID = 6;
 		*(float *)&senddata.data_info[2].data = sum_Bams_Soc / (total_pcsnum - sum_errpcs_num);
 
-		senddata.data_info[3].sAddr.portID = 1;
+		senddata.data_info[3].sAddr.portID = INFO_EMU;
 		senddata.data_info[3].sAddr.devID = 1;
 		senddata.data_info[3].sAddr.typeID = 2;
 		senddata.data_info[3].data_size = 4;

@@ -185,7 +185,7 @@ void sendParaLcd(void)
 	i = shm_addr->shm_que1.wpos;
 	// pcs总数
 	shm_addr->shm_que1.wpos++;
-	shm_addr->shm_que1.slist[i].sAddr.portID = 1; //数据标识1
+	shm_addr->shm_que1.slist[i].sAddr.portID = INFO_EMU; //数据标识1
 	shm_addr->shm_que1.slist[i].sAddr.devID = 1;//数据标识2
 	shm_addr->shm_que1.slist[i].sAddr.typeID = 2;//数据标识3
 	shm_addr->shm_que1.slist[i].sAddr.pointID = 0;//数据标识4
@@ -200,7 +200,7 @@ void sendParaLcd(void)
 	i = shm_addr->shm_que1.wpos;
 	temp = ((float)pFrome61850->balance_rate) / 100;
 	shm_addr->shm_que1.wpos++;
-	shm_addr->shm_que1.slist[i].sAddr.portID = 1;
+	shm_addr->shm_que1.slist[i].sAddr.portID = INFO_EMU;
 	shm_addr->shm_que1.slist[i].sAddr.devID = 1;
 	shm_addr->shm_que1.slist[i].sAddr.typeID = 2;
 	shm_addr->shm_que1.slist[i].sAddr.pointID = 1;
@@ -218,7 +218,7 @@ void sendParaLcd(void)
 		i = shm_addr->shm_que1.wpos;
 
 		shm_addr->shm_que1.wpos = (shm_addr->shm_que1.wpos + 1) % data_num;
-		shm_addr->shm_que1.slist[i].sAddr.portID = 2;
+		shm_addr->shm_que1.slist[i].sAddr.portID = INFO_LCD;
 		shm_addr->shm_que1.slist[i].sAddr.devID = j;
 		shm_addr->shm_que1.slist[i].sAddr.typeID = 1;
 		shm_addr->shm_que1.slist[i].sAddr.pointID = 0;
@@ -230,12 +230,12 @@ void sendParaLcd(void)
 		i = shm_addr->shm_que1.wpos;
 		shm_addr->shm_que1.wpos = (shm_addr->shm_que1.wpos + 1) % data_num;
 
-		shm_addr->shm_que1.slist[i].sAddr.portID = 2;
+		shm_addr->shm_que1.slist[i].sAddr.portID = INFO_LCD;
 		shm_addr->shm_que1.slist[i].sAddr.devID = j + 1;
 		shm_addr->shm_que1.slist[i].sAddr.typeID = 2;
 		shm_addr->shm_que1.slist[i].sAddr.pointID = 1;
 		shm_addr->shm_que1.slist[i].data_size = 4;
-		*(int *)shm_addr->shm_que1.slist[i].data = (int)pFrome61850->pcsnum[i];
+		*(int *)shm_addr->shm_que1.slist[i].data = (int)pFrome61850->pcsnum[j];
 		shm_addr->shm_que1.slist[i].el_tag = _INT_;
 	}
 }
@@ -328,10 +328,10 @@ void CreateThreads(void *para)
 	int i;
 
 	memcpy((unsigned char *)pFrome61850, (unsigned char *)para, sizeof(PARA_61850));
-
-	printf("从主程序获得的参数 %d  %d\n", pFrome61850->lcdnum, pFrome61850->balance_rate);
+	
 	for (i = 0; i < pFrome61850->lcdnum; i++)
 	{
+		// printf("61850接收到的 %d LCD下的数量为:%d \n",i,pFrome61850->pcsnum[i]);
 		total_pcsnum += pFrome61850->pcsnum[i];
 		if ((pFrome61850->flag_RecvNeed_LCD & (1 << i)) !=0)
 		{
