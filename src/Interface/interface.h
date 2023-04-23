@@ -112,6 +112,8 @@ extern PARA_61850 *pFrome61850;
 extern int total_pcsnum;
 extern float Ave_Max_PW;
 extern float Ave_Max_DPW;
+extern int _Reactive_power_zj;
+
 int sendtotask(MyData *senddata);
 unsigned int countRecvFlag(int num_read);
 int myprintbuf(int len, unsigned char *buf);

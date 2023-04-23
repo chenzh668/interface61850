@@ -106,6 +106,8 @@ int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
 				}
 				temp_f /= bms_SendTo61850_Tab[i].precision;
 				*(float *)&senddata.data_info[i].data = temp_f;
+				// printf("61850 temp_f:%f 发送的是:%f\n",temp_f,*(float *)&senddata.data_info[i].data);
+
 			}
 			else if (bms_SendTo61850_Tab[i].el_tag == _U_SHORT_)
 			{
@@ -121,11 +123,14 @@ int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
 
 static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 {
-	static float sum_Bams_MX_DPW = 0;
-	static float sum_Bams_MX_PW = 0;
+	static float sum_Bams_MX_DPW = 0;//保存变流升压舱最大允许充电功率
+	static float sum_Bams_MX_PW = 0; //保存变流升压舱最大允许放电功率
 	static float sum_Bams_Soc = 0;
 	static int sum_errpcs_num = 0;
 	static int flag_recv = 0;
+	static float Maximum_individual_voltage = 0; //最高单体电压
+	static float Minimum_unit_voltage = 0;  //最低单体电压
+
 	MyData senddata;
 	int ret = 0xff;
 	short temp1, temp2;
@@ -147,6 +152,16 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 
 			temp2 = pdata[BMS_SOC * 2] * 256 + pdata[BMS_SOC * 2 + 1];
 			sum_Bams_Soc += (float)temp2;
+
+			temp2 = pdata[BMS_single_MX_voltage * 2] * 256 + pdata[BMS_single_MX_voltage * 2 + 1];
+			if(Maximum_individual_voltage<=temp2){
+				Maximum_individual_voltage = temp2/1000;
+			}
+
+			temp2 = pdata[BMS_single_MI_voltage * 2] * 256 + pdata[BMS_single_MI_voltage * 2 + 1];
+			if(Minimum_unit_voltage<=temp2){
+				Minimum_unit_voltage = temp2/1000;
+			}
 		}
 		else
 			sum_errpcs_num++;
@@ -188,9 +203,66 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 		senddata.data_info[3].data_size = 4;
 		senddata.data_info[3].el_tag = _INT_;
 		senddata.data_info[3].sAddr.pointID = 7;
-
 		*(int *)&senddata.data_info[3].data = sum_errpcs_num;
-		senddata.num = 4;
+
+		//最高单体电压
+		senddata.data_info[4].sAddr.portID = INFO_EMU;
+		senddata.data_info[4].sAddr.devID = 1;
+		senddata.data_info[4].sAddr.typeID = 2;
+		senddata.data_info[4].data_size = 4;
+		senddata.data_info[4].el_tag = _FLOAT_;
+		senddata.data_info[4].sAddr.pointID = 25;
+		*(float *)&senddata.data_info[4].data = Maximum_individual_voltage;
+
+		
+		//最低单体电压
+		senddata.data_info[5].sAddr.portID = INFO_EMU;
+		senddata.data_info[5].sAddr.devID = 1;
+		senddata.data_info[5].sAddr.typeID = 2;
+		senddata.data_info[5].data_size = 4;
+		senddata.data_info[5].el_tag = _FLOAT_;
+		senddata.data_info[5].sAddr.pointID = 26;
+		*(float *)&senddata.data_info[5].data = Minimum_unit_voltage;
+
+
+		//额定功率
+		senddata.data_info[6].sAddr.portID = INFO_EMU;
+		senddata.data_info[6].sAddr.devID = 1;
+		senddata.data_info[6].sAddr.typeID = 2;
+		senddata.data_info[6].data_size = 4;
+		senddata.data_info[6].el_tag = _FLOAT_;
+		senddata.data_info[6].sAddr.pointID = 23;
+		*(float *)&senddata.data_info[6].data = 180 * (total_pcsnum - sum_errpcs_num);
+
+		//额定容量
+		senddata.data_info[7].sAddr.portID = INFO_EMU;
+		senddata.data_info[7].sAddr.devID = 1;
+		senddata.data_info[7].sAddr.typeID = 2;
+		senddata.data_info[7].data_size = 4;
+		senddata.data_info[7].el_tag = _FLOAT_;
+		senddata.data_info[7].sAddr.pointID = 24;
+		*(float *)&senddata.data_info[7].data = 180 * (total_pcsnum - sum_errpcs_num);
+
+		//可增无功
+		senddata.data_info[8].sAddr.portID = INFO_EMU;
+		senddata.data_info[8].sAddr.devID = 1;
+		senddata.data_info[8].sAddr.typeID = 2;
+		senddata.data_info[8].data_size = 4;
+		senddata.data_info[8].el_tag = _FLOAT_;
+		senddata.data_info[8].sAddr.pointID = 20;
+		*(float *)&senddata.data_info[8].data = (180 * (total_pcsnum - sum_errpcs_num))-(_Reactive_power_zj/10);
+
+		//可减无功
+		senddata.data_info[9].sAddr.portID = INFO_EMU;
+		senddata.data_info[9].sAddr.devID = 1;
+		senddata.data_info[9].sAddr.typeID = 2;
+		senddata.data_info[9].data_size = 4;
+		senddata.data_info[9].el_tag = _FLOAT_;
+		senddata.data_info[9].sAddr.pointID = 21;
+		*(float *)&senddata.data_info[9].data = _Reactive_power_zj/10;
+
+
+		senddata.num = 10;
 		ret = sendtotask(&senddata);
 
 		printf("数据发送完成一次循环！！！！ret=%d\n", ret);
@@ -199,6 +271,8 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 		sum_Bams_MX_PW = 0;
 		sum_Bams_Soc = 0;
 		sum_errpcs_num = 0;
+		Maximum_individual_voltage = 0;
+		Minimum_unit_voltage = 0;
 	}
 	return 0;
 }

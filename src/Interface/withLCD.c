@@ -13,6 +13,7 @@ LCD_YC_YX_DATA zjyc_data[MAX_LCD_NUM];
 // short Yc_PW_Data[MAX_TOTAL_PCS_NUM];//
 unsigned int Yx_Pcs_Status = 0;
 unsigned char flag_RecvNeed_PCS[]={0,0,0,0,0,0};
+int _Reactive_power_zj;
 PARA_61850 Frome61850;
 PARA_61850 *pFrome61850 = (PARA_61850 *)&Frome61850;
 
@@ -170,8 +171,10 @@ static int countSumAve_zjyc_Send(void)
 	{
 		if (zjyc_realtime_tab[i].pos_protocol == Active_power_zj)
 			temp = data_Active_power;
-		else if (zjyc_realtime_tab[i].pos_protocol == Reactive_power_zj)
+		else if (zjyc_realtime_tab[i].pos_protocol == Reactive_power_zj){
 			temp = data_Reactive_power;
+			_Reactive_power_zj = data_Reactive_power;
+		}
 		else if (zjyc_realtime_tab[i].pos_protocol == Apparent_power_zj)
 			temp = data_Apparent_power;
 		else
@@ -185,7 +188,6 @@ static int countSumAve_zjyc_Send(void)
 		senddata.data_info[i].data_size = 4;
 		senddata.data_info[i].el_tag = _FLOAT_;
 		senddata.data_info[i].sAddr.pointID = zjyc_realtime_tab[i].pointID;
-
 		*(float *)&senddata.data_info[senddata.num].data[0] = ((float)temp) / zjyc_realtime_tab[i].precision;
 	}
 
@@ -300,7 +302,7 @@ static int countSumAve_yc_Send1(void)
 	//	if(sum_pw>0)
 	{
 
-		senddata.data_info[senddata.num].sAddr.portID = 1;
+		senddata.data_info[senddata.num].sAddr.portID = INFO_EMU;
 		senddata.data_info[senddata.num].sAddr.devID = 1;
 		senddata.data_info[senddata.num].sAddr.typeID = 2;
 		senddata.data_info[senddata.num].data_size = 4;
