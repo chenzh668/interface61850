@@ -10,10 +10,11 @@
 #include "sys.h"
 LCD_YC_YX_DATA yc_data[MAX_TOTAL_PCS_NUM];
 LCD_YC_YX_DATA zjyc_data[MAX_LCD_NUM];
+LCD_YC_YX_DATA zjyx_data[MAX_LCD_NUM];
 // short Yc_PW_Data[MAX_TOTAL_PCS_NUM];//
 unsigned int Yx_Pcs_Status = 0;
 unsigned char flag_RecvNeed_PCS[]={0,0,0,0,0,0};
-int _Reactive_power_zj;
+// int _Reactive_power_zj; //整机无功  用于可增无功、可减无功
 PARA_61850 Frome61850;
 PARA_61850 *pFrome61850 = (PARA_61850 *)&Frome61850;
 
@@ -49,7 +50,7 @@ YX_SEND_FLAG yx_send_flag[] = {
 
 };
 
-unsigned char pcs_fault_flag[MAX_TOTAL_PCS_NUM];
+unsigned char pcs_fault_flag[MAX_TOTAL_PCS_NUM]; //pcs故障
 
 SendTo61850 yc_realtime_tab[] = {
 	{Line_AB_voltage, 1, _FLOAT_, 4, 2, 10},
@@ -78,7 +79,10 @@ SendTo61850 zjyc_realtime_tab[] = {
 	{Active_power_zj, 16, _FLOAT_, 4, 2, 10},	 // 0x117F	"交流有功功率   整机	int16	0.1kW	R
 	{Reactive_power_zj, 17, _FLOAT_, 4, 2, 10},	 // 0x1180	"交流无功功率   整机	int16	0.1kVar
 	{Apparent_power_zj, 18, _FLOAT_, 4, 2, 10},	 // 0x1181	"交流视在功率   整机	int16	0.1kVA	R
-	{DC_power_input_zj, 19, _FLOAT_, 4, 2, 10}	 // 0x1076    "直流功率"	整机	int16	0.1 kW	R
+	{DC_power_input_zj, 19, _FLOAT_, 4, 2, 10},	 // 0x1076    "直流功率"	整机	int16	0.1 kW	R
+
+	{Reactive_power_zj, 20, _FLOAT_, 4, 2, 10},	 //可增无功   0x1180	"交流无功功率   整机	int16	0.1kVar
+	{Reactive_power_zj, 21, _FLOAT_, 4, 2, 10}	 //可减无功   0x1180	"交流无功功率   整机	int16	0.1kVar
 };
 SendTo61850_count yc_count_tab[] = {
 	
@@ -111,7 +115,7 @@ SendTo61850_count yc_count_tab[] = {
 // 	{Reactive_power, 10, _FLOAT_, 4, 2, 10}, //交流无功功率
 // 	{Apparent_power, 11, _FLOAT_, 4, 2, 10}	 //交流视在功率
 // };
-int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdata)
+int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdata,int sn)
 {
 	int i = 0;
 	MyData senddata;
@@ -123,7 +127,8 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 	for (i = 0; i < 11; i++)
 	{
 		senddata.data_info[i].sAddr.portID = INFO_PCS;
-		senddata.data_info[i].sAddr.devID = lcdid * 6 + pcsid;
+		// senddata.data_info[i].sAddr.devID = lcdid * 6 + pcsid;
+		senddata.data_info[i].sAddr.devID = sn+1;
 		senddata.data_info[i].sAddr.typeID = yc_realtime_tab[i].typeID;
 		senddata.data_info[i].sAddr.pointID = yc_realtime_tab[i].pointID;
 		senddata.data_info[i].data_size = yc_realtime_tab[i].data_size;
@@ -149,7 +154,8 @@ static int countSumAve_zjyc_Send(void)
 	int data_Active_power;	 //交流有功功率
 	int data_Reactive_power; //交流无功功率
 	int data_Apparent_power; //交流视在功率
-	int i;
+	int i,j;
+	int m = 0; //统计故障pcs
 	int n = ARRAY_LEN(zjyc_realtime_tab);
 	int temp;
 	int ret;
@@ -173,7 +179,7 @@ static int countSumAve_zjyc_Send(void)
 			temp = data_Active_power;
 		else if (zjyc_realtime_tab[i].pos_protocol == Reactive_power_zj){
 			temp = data_Reactive_power;
-			_Reactive_power_zj = data_Reactive_power;
+			// _Reactive_power_zj = data_Reactive_power;
 		}
 		else if (zjyc_realtime_tab[i].pos_protocol == Apparent_power_zj)
 			temp = data_Apparent_power;
@@ -188,7 +194,20 @@ static int countSumAve_zjyc_Send(void)
 		senddata.data_info[i].data_size = 4;
 		senddata.data_info[i].el_tag = _FLOAT_;
 		senddata.data_info[i].sAddr.pointID = zjyc_realtime_tab[i].pointID;
-		*(float *)&senddata.data_info[senddata.num].data[0] = ((float)temp) / zjyc_realtime_tab[i].precision;
+
+		//可增无功
+		if(zjyc_realtime_tab[i].pointID == 20){
+			for (j = 0; j < total_pcsnum; j++)
+			{
+				if (pcs_fault_flag[j] == 1)
+					m++;
+			}
+			*(float *)&senddata.data_info[i].data[0] = (180 * (total_pcsnum - m))-(((float)temp) / zjyc_realtime_tab[i].precision);
+		}else{
+			// *(float *)&senddata.data_info[senddata.num].data[0] = ((float)temp) / zjyc_realtime_tab[i].precision;
+			*(float *)&senddata.data_info[i].data[0] = ((float)temp) / zjyc_realtime_tab[i].precision;
+		}
+		
 	}
 
 	senddata.num = n;
@@ -203,6 +222,8 @@ static int countSumAve_zjyc_Send(void)
 
 	return 0;
 }
+
+
 static int countSumAve_yc_Send(void)
 {
 	int sumdata[20];
@@ -344,20 +365,29 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 	int ret;
 	printf("LcdTo61850_YX收到遥信数据  lcdid=%d  pcsid_lcd=%d sn=%d  \n", temp.lcdid, temp.pcsid, temp.sn);
 	printf("yx temp.data_len:%d \n",temp.data_len);
+	
+	//pcs故障
+	if(temp.pcs_data[u16_InvRunState1] & (1 << bFaultStatus ) != 0)
+		pcs_fault_flag[temp.sn] = 1;
+
+	//pcs故障
+	if(temp.pcs_data[u16_InvRunState1] & (1 << bFaultStatus ) != 0)
+		pcs_fault_flag[temp.sn] = 1;
 
 	for (i = 0; i < temp.data_len/2; i++)
 	{
 		senddata.data_info[i].sAddr.portID = INFO_PCS;
-		senddata.data_info[i].sAddr.devID = temp.lcdid * 6 + temp.pcsid;
+		// senddata.data_info[i].sAddr.devID = temp.lcdid * 6 + temp.pcsid;
+		senddata.data_info[i].sAddr.devID = temp.sn+1;
 		senddata.data_info[i].sAddr.typeID = 2;
 		senddata.data_info[i].data_size = 2;
 		senddata.data_info[i].el_tag = _U_SHORT_;
 		senddata.data_info[i].sAddr.pointID = base + i;
 		*(unsigned short *)senddata.data_info[i].data = temp.pcs_data[i];
-		// printf("发给 61850 遥信 标识:%d %d %d %d data:%d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,temp.pcs_data[i]);
+		printf("发给 61850 遥信 标识:%d %d %d %d data:%d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,temp.pcs_data[i]);
 
 	}
-	senddata.num = temp.data_len;
+	senddata.num = temp.data_len/2;
 	ret = sendtotask(&senddata);
 
 	if (ret == 1)
@@ -369,6 +399,77 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 
 	return 0;
 }
+
+// static int zjYX_send(void)
+// {
+// 	int sumdata[20];
+// 	int i, j;
+// 	// int margin;
+// 	MyData senddata;
+// 	int n = ARRAY_LEN(yc_count_tab);
+// 	int m = 0; //统计故障pcs
+// 	float temp;
+// 	unsigned char b1, b2;
+// 	int ret;
+// 	for (i = 0; i < 20; i++)
+// 	{
+// 		sumdata[i] = 0;
+// 	}
+// 	for (i = 0; i < n; i++)
+// 	{
+// 		if (yc_count_tab[i].flag == 0)
+// 		{
+
+// 			continue;
+// 		}
+// 		for (j = 0; j < total_pcsnum; j++)
+// 		{
+
+// 			if (pcs_fault_flag[j] == 0)
+// 			{
+// 				b1 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] % 256;
+// 				b2 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] / 256;
+// 				sumdata[i] += (int)(b1 * 256 + b2);
+// 			}
+// 			else
+// 				m++;
+// 		}
+// 	}
+
+// 	for (i = 0; i < n; i++)
+// 	{
+
+// 		if (yc_count_tab[i].flag == 2) //求平均
+// 		{
+// 			sumdata[i] /= (total_pcsnum - m); // yc_count_tab[i].precision;
+// 		}
+// 	}
+// 	for (i = 0; i < n; i++)
+// 	{
+// 		senddata.data_info[i].sAddr.portID = INFO_EMU;
+// 		senddata.data_info[i].sAddr.devID = 1;
+// 		senddata.data_info[i].sAddr.typeID = 2;
+// 		senddata.data_info[i].data_size = yc_count_tab[i].data_size;
+// 		senddata.data_info[i].el_tag = yc_count_tab[i].el_tag;
+// 		senddata.data_info[i].sAddr.pointID = yc_count_tab[i].pointID;
+// 		if (yc_count_tab[i].el_tag == _FLOAT_)
+// 		{
+// 			temp = (float)sumdata[i] / yc_realtime_tab[i].precision;
+// 			*(float *)&senddata.data_info[i].data[0] = temp;
+// 		}
+// 	}
+// 	senddata.num = n;
+// 	// margin = Ave_Max_PW * (total_pcsnum - m) - sumdata[10];
+// 	ret = sendtotask(&senddata);
+
+// 	if (ret == 1)
+// 	{
+// 		printf("遥测统计数据上传成功！！！\n");
+// 	}
+// 	else
+// 		printf("遥测统计数据上传成功失败！！！\n");
+// 	return 0;
+// }
 
 int recvfromlcd(unsigned char type, void *pdata)
 {
@@ -388,7 +489,7 @@ int recvfromlcd(unsigned char type, void *pdata)
 		// Apparent_power=Yc_PW_Data[temp.sn-1];
 		// if (pcs_fault_flag[temp.sn] == 0)
 		{
-			LcdTo61850_YC(temp.lcdid, temp.pcsid, temp.pcs_data);
+			LcdTo61850_YC(temp.lcdid, temp.pcsid, temp.pcs_data,temp.sn);
 			// fun_realtime//上传实时数据
 		}
 		flag_recv_pcs[temp.lcdid] |= (1 << (temp.pcsid - 1));
@@ -428,6 +529,12 @@ int recvfromlcd(unsigned char type, void *pdata)
 
 	case _ZJYX_:
 	{
+		LCD_YC_YX_DATA temp;
+		static unsigned int flag_recv = 0;
+		temp = *(LCD_YC_YX_DATA *)pdata;
+		flag_recv |= (1 << (temp.lcdid - 1));
+		zjyx_data[temp.lcdid - 1] = temp;
+
 		printf("接收到整机遥信！！！！\n");
 	}
 	break;
@@ -502,4 +609,5 @@ void subscribeFromLcd(void)
 	my_func(_YC_, recvfromlcd);
 	my_func(_YX_, recvfromlcd);
 	// my_func(_ZJYC_, recvfromlcd);
+	// my_func(_ZJYX_, recvfromlcd);
 }

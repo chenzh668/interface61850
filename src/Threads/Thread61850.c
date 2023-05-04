@@ -193,6 +193,7 @@ void sendParaLcd(void)
 	shm_addr->shm_que1.slist[i].data_size = 4;
 	*(int *)shm_addr->shm_que1.slist[i].data = total_pcsnum;
 
+
 	printf("发送的数据 d %d %d \n", total_pcsnum, *(int *)shm_addr->shm_que1.slist[i].data);
 	shm_addr->shm_que1.slist[i].el_tag = _INT_;
 

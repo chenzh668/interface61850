@@ -19,6 +19,7 @@ typedef struct
 	int pcsid;
 	unsigned short pcs_data[MAX_YCDATA_NUM];
 	unsigned char data_len;
+
 } LCD_YC_YX_DATA; //
 typedef struct
 {
