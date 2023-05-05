@@ -370,10 +370,6 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 	if(temp.pcs_data[u16_InvRunState1] & (1 << bFaultStatus ) != 0)
 		pcs_fault_flag[temp.sn] = 1;
 
-	//pcs故障
-	if(temp.pcs_data[u16_InvRunState1] & (1 << bFaultStatus ) != 0)
-		pcs_fault_flag[temp.sn] = 1;
-
 	for (i = 0; i < temp.data_len/2; i++)
 	{
 		senddata.data_info[i].sAddr.portID = INFO_PCS;

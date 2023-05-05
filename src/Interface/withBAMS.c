@@ -134,7 +134,7 @@ int BamsTo61850(unsigned char pcsid, unsigned char *pdata)
 	return ret;
 }
 
-static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
+static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata,int numpcs)
 {
 	static float sum_Bams_MX_DPW = 0;//保存变流升压舱最大允许充电功率
 	static float sum_Bams_MX_PW = 0; //保存变流升压舱最大允许放电功率
@@ -147,9 +147,13 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 	static int Minimum_unit_voltage_count = 0;  //累计 < 2.8V最高单体电压个数 等于PCS总数时 发总禁止放电信号；
 	float voltage = 0; 
 	static int Minimum_unit_flag = 0; 
-	int g_flag_RecvNeed_PCS =0xFFFFFFF;
+
+
+	// static unsigned char flag_recv_pcs[] = {0,0,0,0,0,0};
+	//  static int flag_recv_lcd = 0;
+	// int g_flag_RecvNeed_PCS =0xFFFFFFF;
 	// printf("188888 flag_recv=0x%2x  pcsid=%d data=%x %x\n", flag_recv, pcsid, pdata[0], pdata[1]);
-	printf("188888 flag_recv=0x%2x  pcsid=%d \n", flag_recv, pcsid);
+	// printf("188888 flag_recv=0x%2x  pcsid=%d \n", flag_recv, pcsid);
 
 	MyData senddata;
 	int ret = 0xff;
@@ -157,60 +161,62 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 
 	myprintbuf_bms(pcsid,32,pdata);
 
-	if ((flag_recv & (1 << pcsid)) == 0)
+	// if ((flag_recv & (1 << pcsid)) == 0)
+	// {
+	// 	printf("188888 flag_recv=0x%2x  pcsid=%d data=%x %x\n", flag_recv, pcsid, pdata[0], pdata[1]);
+
+	// 	flag_recv |= (1 << pcsid);
+
+	// 	printf("99999 flag_recv=0x%2x  pcsid=%d\n", flag_recv, pcsid);
+	temp1 = pdata[2 * BMS_FAULT_STATUS] * 256 + pdata[2 * BMS_FAULT_STATUS + 1];
+	if (temp1 == 0)
 	{
-		printf("188888 flag_recv=0x%2x  pcsid=%d data=%x %x\n", flag_recv, pcsid, pdata[0], pdata[1]);
-		flag_recv |= (1 << pcsid);
-		printf("99999 flag_recv=0x%2x  pcsid=%d\n", flag_recv, pcsid);
-		temp1 = pdata[2 * BMS_FAULT_STATUS] * 256 + pdata[2 * BMS_FAULT_STATUS + 1];
-		if (temp1 == 0)
-		{
-			temp2 = pdata[BMS_MX_CPW * 2] * 256 + pdata[BMS_MX_CPW * 2 + 1];
-			printf("aaaaa BMS_MX_CPW=%d  temp2=%d\n", BMS_MX_CPW, temp2);
-			sum_Bams_MX_PW += (float)temp2;
+		temp2 = pdata[BMS_MX_CPW * 2] * 256 + pdata[BMS_MX_CPW * 2 + 1];
+		printf("aaaaa BMS_MX_CPW=%d  temp2=%d\n", BMS_MX_CPW, temp2);
+		sum_Bams_MX_PW += (float)temp2;
 
-			temp2 = pdata[BMS_MX_DPW * 2] * 256 + pdata[BMS_MX_DPW * 2 + 1];
-			sum_Bams_MX_DPW += (float)temp2;
+		temp2 = pdata[BMS_MX_DPW * 2] * 256 + pdata[BMS_MX_DPW * 2 + 1];
+		sum_Bams_MX_DPW += (float)temp2;
 
-			temp2 = pdata[BMS_SOC * 2] * 256 + pdata[BMS_SOC * 2 + 1];
-			sum_Bams_Soc += (float)temp2;
+		temp2 = pdata[BMS_SOC * 2] * 256 + pdata[BMS_SOC * 2 + 1];
+		sum_Bams_Soc += (float)temp2;
 
-			temp2 = pdata[BMS_single_MX_voltage * 2] * 256 + pdata[BMS_single_MX_voltage * 2 + 1];
-			voltage = temp2/1000.0;
-			if(Maximum_individual_voltage<=voltage){
-				Maximum_individual_voltage = voltage;
-				// printf("+++++++ 1 Maximum_individual_voltage:%f \n",Maximum_individual_voltage);
-			}
-			if(voltage > 3.6)
-				Maximum_individual_voltage_count++;
-
-			temp2 = pdata[BMS_single_MI_voltage * 2] * 256 + pdata[BMS_single_MI_voltage * 2 + 1];
-			voltage = temp2/1000.0;
-			if(Minimum_unit_flag == 0){
-				Minimum_unit_voltage = voltage;
-				Minimum_unit_flag = 1;
-			}
-			// printf("+++++++2 voltage:%f \n",voltage);
-			if(Minimum_unit_voltage>=voltage){
-				Minimum_unit_voltage = voltage;
-				// printf("+++++++2 Minimum_unit_voltage:%f voltage:%f \n",Minimum_unit_voltage,voltage);
-			}
-			if(Minimum_unit_voltage < 2.8)
-				Minimum_unit_voltage_count++;
-
-
+		temp2 = pdata[BMS_single_MX_voltage * 2] * 256 + pdata[BMS_single_MX_voltage * 2 + 1];
+		voltage = temp2/1000.0;
+		if(Maximum_individual_voltage<=voltage){
+			Maximum_individual_voltage = voltage;
+			// printf("+++++++ 1 Maximum_individual_voltage:%f \n",Maximum_individual_voltage);
 		}
-		else
-			sum_errpcs_num++;
+		if(voltage > 3.6)
+			Maximum_individual_voltage_count++;
+
+		temp2 = pdata[BMS_single_MI_voltage * 2] * 256 + pdata[BMS_single_MI_voltage * 2 + 1];
+		voltage = temp2/1000.0;
+		if(Minimum_unit_flag == 0){
+			Minimum_unit_voltage = voltage;
+			Minimum_unit_flag = 1;
+		}
+		// printf("+++++++2 voltage:%f \n",voltage);
+		if(Minimum_unit_voltage>=voltage){
+			Minimum_unit_voltage = voltage;
+			// printf("+++++++2 Minimum_unit_voltage:%f voltage:%f \n",Minimum_unit_voltage,voltage);
+		}
+		if(Minimum_unit_voltage < 2.8)
+			Minimum_unit_voltage_count++;
+
+
 	}
 	else
-		printf("不该出现！！！！flag_recv=0x%2x pcsid=%d\n", flag_recv, pcsid);
+		sum_errpcs_num++;
+	// }
+	// else
+	// 	printf("不该出现！！！！flag_recv=0x%2x pcsid=%d\n", flag_recv, pcsid);
 	Ave_Max_PW = sum_Bams_MX_PW / total_pcsnum;
 	Ave_Max_DPW = sum_Bams_MX_DPW / total_pcsnum;
 	// if (flag_recv == g_flag_RecvNeed_PCS)
 	
-	printf(" 6185000000 flag recv:%x  g_flag_RecvNeed_PCS:%x\n",flag_recv, g_flag_RecvNeed_PCS);
-	if (flag_recv == g_flag_RecvNeed_PCS)//上传平均值和总和值)
+	printf(" 6185000000 numpcs:%x  total_pcsnum:%x\n",numpcs, total_pcsnum);
+	if (numpcs == total_pcsnum)//上传平均值和总和值)
 	{
 
 		senddata.data_info[0].sAddr.portID = INFO_EMU;
@@ -334,7 +340,7 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata)
 		}
 
 		printf("数据发送完成一次循环！！！！ret=%d\n", ret);
-		flag_recv = 0;
+		// flag_recv = 0;
 		sum_Bams_MX_DPW = 0;
 		sum_Bams_MX_PW = 0;
 		sum_Bams_Soc = 0;
@@ -425,7 +431,6 @@ int recvfromBams_ems(unsigned char pcsid, unsigned char type, void *pdata)
 		{
 			BamsTo61850(pcsid, p);
 		    flag_recv_bms[0] |= (1 << pcsid);
-			countSumAve_Send(pcsid,bms_data.buf_data);
 	
 		}
 		else if(bms_data.bmsid == 1)
@@ -433,7 +438,6 @@ int recvfromBams_ems(unsigned char pcsid, unsigned char type, void *pdata)
 
 			BamsTo61850(pcsid + 18, p);
 			flag_recv_bms[1] |= (1 << pcsid);
-			countSumAve_Send(pcsid+14,bms_data.buf_data);
 
 		}
         else
@@ -444,6 +448,17 @@ int recvfromBams_ems(unsigned char pcsid, unsigned char type, void *pdata)
 		num_pcs = num_pcs1 + num_pcs2;
 		// g_flag_RecvNeed_PCS = num_pcs;
 	
+		if (bms_data.bmsid == 0)
+		{
+			countSumAve_Send(pcsid,bms_data.buf_data,num_pcs);
+	
+		}
+		else if(bms_data.bmsid == 1)
+		{
+			countSumAve_Send(pcsid+14,bms_data.buf_data,num_pcs);
+
+		}
+
 		printf("61850接口收到来自bms数据 recvfromBams_ems bmsid=%d  pcsid=%d num_pcs=%d num_pcs1=%d num_pcs2=%d\n",bms_data.bmsid, pcsid, num_pcs,num_pcs1,num_pcs2);
 		if(num_pcs>=total_pcsnum)
 		{
