@@ -15,6 +15,8 @@
 #include "withLCD.h"
 #include "withBAMS.h"
 #include "withPLC.h"
+PARA_61850 Frome61850_temp11;
+
 static iec61850_shm_packet_t *shm_addr; /* 共享内存区的首地址指针, 也是iec61850_shm_data_t的指针 */
 // static int semid;
 
@@ -243,12 +245,15 @@ void sendParaLcd(void)
 
 void *thread_61850_write(void *arg)
 {
+	PARA_61850 Frome61850_temp;
+
 	int ret_value = 0;
 	//	key_t key1 = ftok(IEC61850_IPC_PATH, IEC61850_IPC_KEY);
 	msgLcd pmsg;
 	MyData senddata;
 	int i, j;
 	int flag = 0;
+	int flag_test=1;
 	// int shmid = shmget(key1, 0, 0);
 	// if (shmid == -1)
 	// {
@@ -273,6 +278,15 @@ void *thread_61850_write(void *arg)
 	sem_post(sem1);
 	while (1)
 	{
+		if(flag_test==1)
+		{
+            memcpy((char*)&Frome61850_temp,(char*)pFrome61850,sizeof(Frome61850));
+			flag_test++;
+		}
+		
+		// printf("aaaaaaaaaaaaaaaaaaaaaa$$$$2 pFrome61850->flag_RecvNeed_LCD:%d g_flag_RecvNeed_LCD:%d pFrome61850地址:%p  \n",pFrome61850->flag_RecvNeed_LCD,g_flag_RecvNeed_LCD,pFrome61850);
+		// printf("aaaaaaaaaaaaaaaaaaaaaa$$$$3 Frome61850_temp.flag_RecvNeed_LCD:%d lcdnum:%d   \n",Frome61850_temp.flag_RecvNeed_LCD,g_flag_RecvNeed_LCD,Frome61850_temp.lcdnum);
+		// printf("aaaaaaaaaaaaaaaaaaaaaa$$$$4 Frome61850_temp11.flag_RecvNeed_LCD:%d lcdnum:%d   \n",Frome61850_temp11.flag_RecvNeed_LCD,g_flag_RecvNeed_LCD,Frome61850_temp11.lcdnum);
 		ret_value = os_rev_msgqueue(g_lcd_qmegid, &pmsg, sizeof(msgLcd), 0, 5);
 		if (ret_value >= 0)
 		{
@@ -329,7 +343,8 @@ void CreateThreads(void *para)
 	int i;
 
 	memcpy((unsigned char *)pFrome61850, (unsigned char *)para, sizeof(PARA_61850));
-	
+	memcpy((unsigned char *)&Frome61850_temp11,(unsigned char *)para,sizeof(PARA_61850));
+	g_flag_RecvNeed_LCD = pFrome61850->flag_RecvNeed_LCD;
 	for (i = 0; i < pFrome61850->lcdnum; i++)
 	{
 		// printf("61850接收到的 %d LCD下的数量为:%d \n",i,pFrome61850->pcsnum[i]);
@@ -338,6 +353,7 @@ void CreateThreads(void *para)
 		{
 			flag_RecvNeed_PCS[i] = countRecvFlag(pFrome61850->pcsnum[i]);
 		}
+		printf("111111111111flag_RecvNeed_PCS[%d]= %d pFrome61850->pcsnum[%d]=%d \n",i,flag_RecvNeed_PCS[i],i,pFrome61850->pcsnum[i]);
 	}
 	for (i = 0; i < total_pcsnum; i++)
 	{

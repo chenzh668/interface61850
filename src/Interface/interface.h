@@ -108,11 +108,14 @@ typedef int (*CallbackYK)(unsigned char, void *pdata); //遥控回调函数签�
 typedef int (*YKOrder)(unsigned char, YK_PARA *, CallbackYK);
 extern YKOrder ykOrder_61850;
 extern YKOrder ykOrder_61850_plc;
-extern PARA_61850 *pFrome61850;
+extern volatile PARA_61850 *pFrome61850;
 extern int total_pcsnum;
 extern float Ave_Max_PW;
 extern float Ave_Max_DPW;
+
+extern int g_flag_RecvNeed_LCD;
 // extern int _Reactive_power_zj;
+extern volatile PARA_61850 Frome61850;
 
 int sendtotask(MyData *senddata);
 unsigned int countRecvFlag(int num_read);

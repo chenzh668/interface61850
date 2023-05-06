@@ -140,7 +140,7 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata,int numpcs
 	static float sum_Bams_MX_PW = 0; //保存变流升压舱最大允许放电功率
 	static float sum_Bams_Soc = 0;
 	static int sum_errpcs_num = 0;
-	static int flag_recv = 0;
+	// static int flag_recv = 0;
 	static float Maximum_individual_voltage = 0; //最高单体电压
 	static float Minimum_unit_voltage = 0;  //最低单体电压
 	static int Maximum_individual_voltage_count = 0;  //累计 > 3.6V最高单体电压个数 等于PCS总数时 发总禁止充电信号

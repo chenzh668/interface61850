@@ -8,6 +8,9 @@
 #include "YC_Define.h"
 #include "interface.h"
 #include "sys.h"
+volatile PARA_61850 Frome61850;
+volatile PARA_61850 *pFrome61850 = (PARA_61850 *)&Frome61850;
+
 LCD_YC_YX_DATA yc_data[MAX_TOTAL_PCS_NUM];
 LCD_YC_YX_DATA zjyc_data[MAX_LCD_NUM];
 LCD_YC_YX_DATA zjyx_data[MAX_LCD_NUM];
@@ -15,8 +18,7 @@ LCD_YC_YX_DATA zjyx_data[MAX_LCD_NUM];
 unsigned int Yx_Pcs_Status = 0;
 unsigned char flag_RecvNeed_PCS[]={0,0,0,0,0,0};
 // int _Reactive_power_zj; //整机无功  用于可增无功、可减无功
-PARA_61850 Frome61850;
-PARA_61850 *pFrome61850 = (PARA_61850 *)&Frome61850;
+
 
 YKOrder ykOrder_61850 = NULL;
 unsigned char yc_Send_Flag[][4] = {
@@ -51,6 +53,10 @@ YX_SEND_FLAG yx_send_flag[] = {
 };
 
 unsigned char pcs_fault_flag[MAX_TOTAL_PCS_NUM]; //pcs故障
+unsigned char pcs_and_off_flag[MAX_TOTAL_PCS_NUM]; //pcs并离网
+unsigned char pcs_on_off_flag[MAX_TOTAL_PCS_NUM]; //pcs开关机
+unsigned char pcs_Remote_signal_flag[MAX_TOTAL_PCS_NUM]; //pcs远方信号
+
 
 SendTo61850 yc_realtime_tab[] = {
 	{Line_AB_voltage, 1, _FLOAT_, 4, 2, 10},
@@ -142,7 +148,7 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 			temp = (float)temp_i / yc_realtime_tab[i].precision;
 			*(float *)&senddata.data_info[i].data = temp;
 		}
-		// printf("发给 61850 遥测 标识:%d %d %d %d data:%d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,temp.pcs_data[i]);
+		 printf("发给 61850 遥测 标识:%d %d %d %d data:%f\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,temp);
 	}
 	senddata.num = 11;
 	ret = sendtotask(&senddata);
@@ -363,12 +369,37 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 	int i;
 	int base = 12;
 	int ret;
-	printf("LcdTo61850_YX收到遥信数据  lcdid=%d  pcsid_lcd=%d sn=%d  \n", temp.lcdid, temp.pcsid, temp.sn);
-	printf("yx temp.data_len:%d \n",temp.data_len);
-	
+	printf("LcdTo61850_YX收到遥信数据  lcdid=%d  pcsid_lcd=%d sn=%d data_len:%d\n", temp.lcdid, temp.pcsid, temp.sn,temp.data_len);
+	printf("pcs 遥信 变流运行状态1:%d 变流器状态字1:%d 输入状态:%d \n",temp.pcs_data[u16_InvRunState1],temp.pcs_data[st_FlagSciSystemState1],temp.pcs_data[st_FlagInput]);
 	//pcs故障
-	if(temp.pcs_data[u16_InvRunState1] & (1 << bFaultStatus ) != 0)
+	if((temp.pcs_data[u16_InvRunState1] & (1 << bFaultStatus )) != 0)
 		pcs_fault_flag[temp.sn] = 1;
+	else 
+		pcs_fault_flag[temp.sn] = 0;
+
+	//离网
+	if((temp.pcs_data[u16_InvRunState1] & (1 << bFffLineRunning )) != 0)
+		pcs_and_off_flag[temp.sn] = 0;
+
+	//并网
+	if((temp.pcs_data[u16_InvRunState1] & (1 << bMergeCircuit )) != 0)
+		pcs_and_off_flag[temp.sn] = 1;
+
+	//远程、本地
+	if((temp.pcs_data[st_FlagSciSystemState1] & (1 << bConnectMode )) != 0)
+		pcs_Remote_signal_flag[temp.sn] = 1;
+	else
+		pcs_Remote_signal_flag[temp.sn] = 0;
+
+	//开关机
+	if((temp.pcs_data[st_FlagInput] & (1 << bLocalStop )) != 0)
+		pcs_on_off_flag[temp.sn] = 1;
+	else
+		pcs_on_off_flag[temp.sn] = 0;
+
+	
+
+	
 
 	for (i = 0; i < temp.data_len/2; i++)
 	{
@@ -467,6 +498,85 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 // 	return 0;
 // }
 
+static int YX_ztMsg_Send(void){
+		MyData senddata;
+		int i,j,ret;
+		char pcs_and_off = 0;
+		char pcs_on_off = 0;
+		char pcs_Remote_signal = 0;
+		int pos=0;
+
+		for(i=0;i<total_pcsnum-1;i++){
+			for(j=1;j<total_pcsnum;j++){
+				if((pcs_and_off_flag[i] && pcs_and_off_flag[j])){
+					pcs_and_off = 1;
+				}else{
+					pcs_and_off = 0;
+					break;
+				}
+
+				if(pcs_on_off_flag[i] || pcs_on_off_flag[j]){
+					pcs_on_off = 1;
+					break;
+				}else{
+					pcs_on_off = 0;
+				}
+
+				if(pcs_Remote_signal_flag[i] || pcs_Remote_signal_flag[j]){
+					pcs_Remote_signal = 1;
+					break;
+				}else{
+					pcs_Remote_signal = 0;
+				}
+			}		
+		}
+
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _BOOL_;
+		senddata.data_info[pos].sAddr.pointID = 5;
+		senddata.data_info[pos].data[0] = pcs_and_off;
+		pos++;
+	
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _BOOL_;
+		senddata.data_info[pos].sAddr.pointID = 4;
+		senddata.data_info[pos].data[0] = pcs_on_off;
+		pos++;
+
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _BOOL_;
+		senddata.data_info[pos].sAddr.pointID = 6;
+		senddata.data_info[pos].data[0] = pcs_Remote_signal;
+		pos++;
+
+		for ( i = 0; i < pos; i++)
+		{
+			printf("总体信息 发给 61850 遥信 标识:%d %d %d %d data:%d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,senddata.data_info[i].data[0]);
+		}
+		
+
+		senddata.num = pos;
+		ret = sendtotask(&senddata);
+
+		if (ret == 1)
+		{
+			printf("遥信总体信息数据上传成功！！！\n");
+		}
+		else
+			printf("遥信总体信息上传成功失败！！！\n");
+
+		return 0;
+}
+
 int recvfromlcd(unsigned char type, void *pdata)
 {
 	switch (type)
@@ -497,7 +607,9 @@ int recvfromlcd(unsigned char type, void *pdata)
 			flag_recv_pcs[temp.lcdid] = 0;
 		}
 
-		if (flag_recv_lcd == pFrome61850->flag_RecvNeed_LCD)//上传平均值和总和值
+		printf("收到遥测数据22 flag_recv_lcd:%d g_flag_RecvNeed_LCD:%d\n",flag_recv_lcd,g_flag_RecvNeed_LCD);
+		// if (flag_recv_lcd == pFrome61850->flag_RecvNeed_LCD)//上传平均值和总和值
+		if (flag_recv_lcd == g_flag_RecvNeed_LCD)
 		{
 			printf("上传平均值或总和值 flag_recv=%x\n", flag_recv_lcd);
 			countSumAve_yc_Send();
@@ -508,8 +620,29 @@ int recvfromlcd(unsigned char type, void *pdata)
 	case _YX_:
 	{
 		printf("recvfromlcd收到遥信数据\n");
-		LcdTo61850_YX((LCD_YC_YX_DATA *)pdata);
+		LCD_YC_YX_DATA temp;
+		temp = *(LCD_YC_YX_DATA *)pdata;
+		static unsigned char flag_recv_pcs[] = {0, 0, 0, 0, 0, 0};
+		static int flag_recv_lcd = 0;
 
+		flag_recv_pcs[temp.lcdid] |= (1 << (temp.pcsid - 1));
+		LcdTo61850_YX((LCD_YC_YX_DATA *)pdata);
+		printf("recvfromlcd收到遥信数据aaaaaaaaaa\n");
+		if (flag_recv_pcs[temp.lcdid] == flag_RecvNeed_PCS[temp.lcdid])
+		{
+
+			flag_recv_lcd |= (1 << temp.lcdid);
+			flag_recv_pcs[temp.lcdid] = 0;
+		}
+
+		printf("recvfromlcd收到遥信数据22 flag_recv_lcd:%d g_flag_RecvNeed_LCD:%d  Frome61850.flag_RecvNeed_LCD:%d Frome61850.lcdnum:%d\n",flag_recv_lcd,g_flag_RecvNeed_LCD,Frome61850.flag_RecvNeed_LCD,Frome61850.lcdnum);
+		// if (flag_recv_lcd == pFrome61850->flag_RecvNeed_LCD)//上传平均值和总和值
+		if (flag_recv_lcd == g_flag_RecvNeed_LCD)//上传平均值和总和值
+		{
+			printf("上传平均值或总和值 flag_recv_lcd=%x\n", flag_recv_lcd);
+			YX_ztMsg_Send();
+			flag_recv_lcd = 0;
+		}
 		// unsigned char b;
 		//  b = temp.pcs_data[0];
 		//  if (b & (1 << bPcsRunning))
