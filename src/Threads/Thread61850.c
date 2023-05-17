@@ -178,70 +178,70 @@ void *thread_61850_read(void *arg)
 	return NULL;
 }
 
-void sendParaLcd(void)
-{
-	float temp;
-	int i, j;
+// void sendParaLcd(void)
+// {
+// 	float temp;
+// 	int i, j;
 
-	// printf("11111111111111111111\n");
-	i = shm_addr->shm_que1.wpos;
-	// pcs总数
-	shm_addr->shm_que1.wpos++;
-	shm_addr->shm_que1.slist[i].sAddr.portID = INFO_EMU; //数据标识1
-	shm_addr->shm_que1.slist[i].sAddr.devID = 1;//数据标识2
-	shm_addr->shm_que1.slist[i].sAddr.typeID = 2;//数据标识3
-	shm_addr->shm_que1.slist[i].sAddr.pointID = 0;//数据标识4
+// 	// printf("11111111111111111111\n");
+// 	i = shm_addr->shm_que1.wpos;
+// 	// pcs总数
+// 	shm_addr->shm_que1.wpos++;
+// 	shm_addr->shm_que1.slist[i].sAddr.portID = INFO_EMU; //数据标识1
+// 	shm_addr->shm_que1.slist[i].sAddr.devID = 1;//数据标识2
+// 	shm_addr->shm_que1.slist[i].sAddr.typeID = 2;//数据标识3
+// 	shm_addr->shm_que1.slist[i].sAddr.pointID = 0;//数据标识4
 
-	shm_addr->shm_que1.slist[i].data_size = 4;
-	*(int *)shm_addr->shm_que1.slist[i].data = total_pcsnum;
+// 	shm_addr->shm_que1.slist[i].data_size = 4;
+// 	*(int *)shm_addr->shm_que1.slist[i].data = total_pcsnum;
 
 
-	printf("发送的数据 d %d %d \n", total_pcsnum, *(int *)shm_addr->shm_que1.slist[i].data);
-	shm_addr->shm_que1.slist[i].el_tag = _INT_;
+// 	printf("发送的数据 d %d %d \n", total_pcsnum, *(int *)shm_addr->shm_que1.slist[i].data);
+// 	shm_addr->shm_que1.slist[i].el_tag = _INT_;
 
-	//均衡速度
-	i = shm_addr->shm_que1.wpos;
-	temp = ((float)pFrome61850->balance_rate) / 100;
-	shm_addr->shm_que1.wpos++;
-	shm_addr->shm_que1.slist[i].sAddr.portID = INFO_EMU;
-	shm_addr->shm_que1.slist[i].sAddr.devID = 1;
-	shm_addr->shm_que1.slist[i].sAddr.typeID = 2;
-	shm_addr->shm_que1.slist[i].sAddr.pointID = 1;
+// 	//均衡速度
+// 	i = shm_addr->shm_que1.wpos;
+// 	temp = ((float)pFrome61850->balance_rate) / 100;
+// 	shm_addr->shm_que1.wpos++;
+// 	shm_addr->shm_que1.slist[i].sAddr.portID = INFO_EMU;
+// 	shm_addr->shm_que1.slist[i].sAddr.devID = 1;
+// 	shm_addr->shm_que1.slist[i].sAddr.typeID = 2;
+// 	shm_addr->shm_que1.slist[i].sAddr.pointID = 1;
 
-	shm_addr->shm_que1.slist[i].data_size = 4;
-	*(float *)shm_addr->shm_que1.slist[i].data = temp;
+// 	shm_addr->shm_que1.slist[i].data_size = 4;
+// 	*(float *)shm_addr->shm_que1.slist[i].data = temp;
 
-	printf("发送的数据 f %f %f \n", temp, *(float *)shm_addr->shm_que1.slist[i].data);
-	shm_addr->shm_que1.slist[i].el_tag = _FLOAT_;
+// 	printf("发送的数据 f %f %f \n", temp, *(float *)shm_addr->shm_que1.slist[i].data);
+// 	shm_addr->shm_que1.slist[i].el_tag = _FLOAT_;
 
-	// 每个LCD通信状态，PCS个数
-	for (j = 0; j < pFrome61850->lcdnum; j++)
-	{
-		// 通信状态，初始设置为通信正常
-		i = shm_addr->shm_que1.wpos;
+// 	// 每个LCD通信状态，PCS个数
+// 	for (j = 0; j < pFrome61850->lcdnum; j++)
+// 	{
+// 		// 通信状态，初始设置为通信正常
+// 		i = shm_addr->shm_que1.wpos;
 
-		shm_addr->shm_que1.wpos = (shm_addr->shm_que1.wpos + 1) % data_num;
-		shm_addr->shm_que1.slist[i].sAddr.portID = INFO_LCD;
-		shm_addr->shm_que1.slist[i].sAddr.devID = j;
-		shm_addr->shm_que1.slist[i].sAddr.typeID = 1;
-		shm_addr->shm_que1.slist[i].sAddr.pointID = 0;
-		shm_addr->shm_que1.slist[i].data_size = 1;
-		shm_addr->shm_que1.slist[i].data[0] = 1; // 通信正常
+// 		shm_addr->shm_que1.wpos = (shm_addr->shm_que1.wpos + 1) % data_num;
+// 		shm_addr->shm_que1.slist[i].sAddr.portID = INFO_LCD;
+// 		shm_addr->shm_que1.slist[i].sAddr.devID = j;
+// 		shm_addr->shm_que1.slist[i].sAddr.typeID = 1;
+// 		shm_addr->shm_que1.slist[i].sAddr.pointID = 0;
+// 		shm_addr->shm_que1.slist[i].data_size = 1;
+// 		shm_addr->shm_que1.slist[i].data[0] = 1; // 通信正常
 
-		shm_addr->shm_que1.slist[i].el_tag = _BOOL_;
-		// 每个LCD下的PCS个数
-		i = shm_addr->shm_que1.wpos;
-		shm_addr->shm_que1.wpos = (shm_addr->shm_que1.wpos + 1) % data_num;
+// 		shm_addr->shm_que1.slist[i].el_tag = _BOOL_;
+// 		// 每个LCD下的PCS个数
+// 		i = shm_addr->shm_que1.wpos;
+// 		shm_addr->shm_que1.wpos = (shm_addr->shm_que1.wpos + 1) % data_num;
 
-		shm_addr->shm_que1.slist[i].sAddr.portID = INFO_LCD;
-		shm_addr->shm_que1.slist[i].sAddr.devID = j + 1;
-		shm_addr->shm_que1.slist[i].sAddr.typeID = 2;
-		shm_addr->shm_que1.slist[i].sAddr.pointID = 1;
-		shm_addr->shm_que1.slist[i].data_size = 4;
-		*(int *)shm_addr->shm_que1.slist[i].data = (int)pFrome61850->pcsnum[j];
-		shm_addr->shm_que1.slist[i].el_tag = _INT_;
-	}
-}
+// 		shm_addr->shm_que1.slist[i].sAddr.portID = INFO_LCD;
+// 		shm_addr->shm_que1.slist[i].sAddr.devID = j + 1;
+// 		shm_addr->shm_que1.slist[i].sAddr.typeID = 2;
+// 		shm_addr->shm_que1.slist[i].sAddr.pointID = 1;
+// 		shm_addr->shm_que1.slist[i].data_size = 4;
+// 		*(int *)shm_addr->shm_que1.slist[i].data = (int)pFrome61850->pcsnum[j];
+// 		shm_addr->shm_que1.slist[i].el_tag = _INT_;
+// 	}
+// }
 
 void *thread_61850_write(void *arg)
 {
@@ -270,10 +270,10 @@ void *thread_61850_write(void *arg)
 		sleep(1);
 	}
 
-	// 发送参数
-	sem_wait(mutex1_lock);
-	sendParaLcd();
-	sem_post(mutex1_lock);
+	// // 发送参数
+	// sem_wait(mutex1_lock);
+	// sendParaLcd();
+	// sem_post(mutex1_lock);
 
 	sem_post(sem1);
 	while (1)
@@ -284,9 +284,6 @@ void *thread_61850_write(void *arg)
 			flag_test++;
 		}
 		
-		// printf("aaaaaaaaaaaaaaaaaaaaaa$$$$2 pFrome61850->flag_RecvNeed_LCD:%d g_flag_RecvNeed_LCD:%d pFrome61850地址:%p  \n",pFrome61850->flag_RecvNeed_LCD,g_flag_RecvNeed_LCD,pFrome61850);
-		// printf("aaaaaaaaaaaaaaaaaaaaaa$$$$3 Frome61850_temp.flag_RecvNeed_LCD:%d lcdnum:%d   \n",Frome61850_temp.flag_RecvNeed_LCD,g_flag_RecvNeed_LCD,Frome61850_temp.lcdnum);
-		// printf("aaaaaaaaaaaaaaaaaaaaaa$$$$4 Frome61850_temp11.flag_RecvNeed_LCD:%d lcdnum:%d   \n",Frome61850_temp11.flag_RecvNeed_LCD,g_flag_RecvNeed_LCD,Frome61850_temp11.lcdnum);
 		ret_value = os_rev_msgqueue(g_lcd_qmegid, &pmsg, sizeof(msgLcd), 0, 5);
 		if (ret_value >= 0)
 		{
@@ -340,29 +337,7 @@ void CreateThreads(void *para)
 	pthread_t ThreadID;
 	pthread_attr_t Thread_attr;
 	key_t key = 0;
-	int i;
 
-	memcpy((unsigned char *)pFrome61850, (unsigned char *)para, sizeof(PARA_61850));
-	memcpy((unsigned char *)&Frome61850_temp11,(unsigned char *)para,sizeof(PARA_61850));
-	g_flag_RecvNeed_LCD = pFrome61850->flag_RecvNeed_LCD;
-	for (i = 0; i < pFrome61850->lcdnum; i++)
-	{
-		// printf("61850接收到的 %d LCD下的数量为:%d \n",i,pFrome61850->pcsnum[i]);
-		total_pcsnum += pFrome61850->pcsnum[i];
-		if ((pFrome61850->flag_RecvNeed_LCD & (1 << i)) !=0)
-		{
-			flag_RecvNeed_PCS[i] = countRecvFlag(pFrome61850->pcsnum[i]);
-		}
-		printf("111111111111flag_RecvNeed_PCS[%d]= %d pFrome61850->pcsnum[%d]=%d \n",i,flag_RecvNeed_PCS[i],i,pFrome61850->pcsnum[i]);
-	}
-	for (i = 0; i < total_pcsnum; i++)
-	{
-		pcs_fault_flag[i] = 0;
-	}
-	if (total_pcsnum > 36)
-		total_pcsnum = 36;
-
-	printf("61850从主程序获得的参数 %d  %d total_pcs=%d\n", pFrome61850->lcdnum, pFrome61850->balance_rate, total_pcsnum);
 
 	if (FAIL == CreateSettingThread(&ThreadID, &Thread_attr, (void *)thread_61850_read, NULL, 1, 1))
 	{

@@ -14,4 +14,6 @@ typedef struct
 } PARA_61850; //从主控传到61850模块的结构
 
 int lib61850_main(void* para);
+void recvLcdPara(void *para);
+
 #endif

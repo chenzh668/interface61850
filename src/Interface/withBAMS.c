@@ -218,107 +218,115 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata,int numpcs
 	printf(" 6185000000 numpcs:%x  total_pcsnum:%x\n",numpcs, total_pcsnum);
 	if (numpcs == total_pcsnum)//上传平均值和总和值)
 	{
+		int pos=0;
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _FLOAT_;
+		senddata.data_info[pos].sAddr.pointID = 2;
+		*(float *)&senddata.data_info[pos].data[0] = sum_Bams_MX_PW;
+		pos++;
 
-		senddata.data_info[0].sAddr.portID = INFO_EMU;
-		senddata.data_info[0].sAddr.devID = 1;
-		senddata.data_info[0].sAddr.typeID = 2;
-		senddata.data_info[0].data_size = 4;
-		senddata.data_info[0].el_tag = _FLOAT_;
-		senddata.data_info[0].sAddr.pointID = 2;
-		*(float *)&senddata.data_info[0].data[0] = sum_Bams_MX_PW;
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _FLOAT_;
+		senddata.data_info[pos].sAddr.pointID = 3;
+		*(float *)&senddata.data_info[pos].data = sum_Bams_MX_DPW;
+		pos++;
 
-		senddata.data_info[1].sAddr.portID = INFO_EMU;
-		senddata.data_info[1].sAddr.devID = 1;
-		senddata.data_info[1].sAddr.typeID = 2;
-		senddata.data_info[1].data_size = 4;
-		senddata.data_info[1].el_tag = _FLOAT_;
-		senddata.data_info[1].sAddr.pointID = 3;
-		*(float *)&senddata.data_info[1].data = sum_Bams_MX_DPW;
-
-		senddata.data_info[2].sAddr.portID = INFO_EMU;
-		senddata.data_info[2].sAddr.devID = 1;
-		senddata.data_info[2].sAddr.typeID = 2;
-		senddata.data_info[2].data_size = 4;
-		senddata.data_info[2].el_tag = _FLOAT_;
-		senddata.data_info[2].sAddr.pointID = 6;
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _FLOAT_;
+		senddata.data_info[pos].sAddr.pointID = 6;
 		printf("sum_Bams_Soc:%f  \n",sum_Bams_Soc);
-		*(float *)&senddata.data_info[2].data = (sum_Bams_Soc / (total_pcsnum - sum_errpcs_num))/1000.0;
+		*(float *)&senddata.data_info[pos].data = (sum_Bams_Soc / (total_pcsnum - sum_errpcs_num))/1000.0;
+		pos++;
 
-		senddata.data_info[3].sAddr.portID = INFO_EMU;
-		senddata.data_info[3].sAddr.devID = 1;
-		senddata.data_info[3].sAddr.typeID = 2;
-		senddata.data_info[3].data_size = 4;
-		senddata.data_info[3].el_tag = _INT_;
-		senddata.data_info[3].sAddr.pointID = 7;
-		*(int *)&senddata.data_info[3].data = sum_errpcs_num;
-
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _INT_;
+		senddata.data_info[pos].sAddr.pointID = 7;
+		*(int *)&senddata.data_info[pos].data = sum_errpcs_num;
+		pos++;
 
 		//最高单体电压
-		senddata.data_info[4].sAddr.portID = INFO_EMU;
-		senddata.data_info[4].sAddr.devID = 1;
-		senddata.data_info[4].sAddr.typeID = 2;
-		senddata.data_info[4].data_size = 4;
-		senddata.data_info[4].el_tag = _FLOAT_;
-		senddata.data_info[4].sAddr.pointID = 25;
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _FLOAT_;
+		senddata.data_info[pos].sAddr.pointID = 25;
 		printf("1111111111Maximum_individual_voltage:%f  \n",Maximum_individual_voltage);
-		*(float *)&senddata.data_info[4].data = Maximum_individual_voltage;
+		*(float *)&senddata.data_info[pos].data = Maximum_individual_voltage;
+		pos++;
 
 		//最低单体电压
-		senddata.data_info[5].sAddr.portID = INFO_EMU;
-		senddata.data_info[5].sAddr.devID = 1;
-		senddata.data_info[5].sAddr.typeID = 2;
-		senddata.data_info[5].data_size = 4;
-		senddata.data_info[5].el_tag = _FLOAT_;
-		senddata.data_info[5].sAddr.pointID = 26;
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _FLOAT_;
+		senddata.data_info[pos].sAddr.pointID = 26;
 		printf("1111111111Minimum_unit_voltage:%f  \n",Minimum_unit_voltage);
-		*(float *)&senddata.data_info[5].data = Minimum_unit_voltage;
+		*(float *)&senddata.data_info[pos].data = Minimum_unit_voltage;
+		pos++;
 
 		//额定功率
-		senddata.data_info[6].sAddr.portID = INFO_EMU;
-		senddata.data_info[6].sAddr.devID = 1;
-		senddata.data_info[6].sAddr.typeID = 2;
-		senddata.data_info[6].data_size = 4;
-		senddata.data_info[6].el_tag = _FLOAT_;
-		senddata.data_info[6].sAddr.pointID = 23;
-		*(float *)&senddata.data_info[6].data = 180 * (total_pcsnum - sum_errpcs_num);
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _FLOAT_;
+		senddata.data_info[pos].sAddr.pointID = 23;
+		*(float *)&senddata.data_info[pos].data = 180 * (total_pcsnum - sum_errpcs_num);
+		pos++;
 
 		//额定容量
-		senddata.data_info[7].sAddr.portID = INFO_EMU;
-		senddata.data_info[7].sAddr.devID = 1;
-		senddata.data_info[7].sAddr.typeID = 2;
-		senddata.data_info[7].data_size = 4;
-		senddata.data_info[7].el_tag = _FLOAT_;
-		senddata.data_info[7].sAddr.pointID = 24;
-		*(float *)&senddata.data_info[7].data = 180 * (total_pcsnum - sum_errpcs_num);
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _FLOAT_;
+		senddata.data_info[pos].sAddr.pointID = 24;
+		*(float *)&senddata.data_info[pos].data = 180 * (total_pcsnum - sum_errpcs_num);
+		pos++;
 
 		//总禁止充电
-		senddata.data_info[8].sAddr.portID = INFO_EMU;
-		senddata.data_info[8].sAddr.devID = 1;
-		senddata.data_info[8].sAddr.typeID = 1;
-		senddata.data_info[8].data_size = 4;
-		senddata.data_info[8].el_tag = _BOOL_;
-		senddata.data_info[8].sAddr.pointID = 7;
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 1;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _BOOL_;
+		senddata.data_info[pos].sAddr.pointID = 7;
 		if(Maximum_individual_voltage_count == total_pcsnum){
-			senddata.data_info[8].data[0] = 1;
+			senddata.data_info[pos].data[0] = 1;
 		}else{
-			senddata.data_info[8].data[0] = 0;
+			senddata.data_info[pos].data[0] = 0;
 		}
+		pos++;
 		
 		//总禁止放电
-		senddata.data_info[9].sAddr.portID = INFO_EMU;
-		senddata.data_info[9].sAddr.devID = 1;
-		senddata.data_info[9].sAddr.typeID = 1;
-		senddata.data_info[9].data_size = 4;
-		senddata.data_info[9].el_tag = _BOOL_;
-		senddata.data_info[9].sAddr.pointID = 8;
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 1;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _BOOL_;
+		senddata.data_info[pos].sAddr.pointID = 8;
 		if(Maximum_individual_voltage_count == total_pcsnum){
-			senddata.data_info[9].data[0] = 1;
+			senddata.data_info[pos].data[0] = 1;
 		}else{
-			senddata.data_info[9].data[0] = 0;
+			senddata.data_info[pos].data[0] = 0;
 		}
+		pos++;
 
-
-		senddata.num = 10;
+		senddata.num = pos;
 		ret = sendtotask(&senddata);
 
 		int s;
@@ -366,54 +374,6 @@ int countPcsNum_Bms(unsigned int flag_recv)
 	return num_pcs;
 }
 
-// int recvfromBams_ems(unsigned char pcsid_bms, unsigned char type, void *pdata)
-// {
-// 	int i;
-// 	switch (type)
-// 	{
-// 	case _ALL_:
-// 	{
-// 		static unsigned int flag_recv_bms[] = {0, 0};
-// 		int num_pcs1, num_pcs2, num_pcs;
-// 		BmsData temp = *(BmsData *)pdata;
-// 		unsigned char bmsid = temp.bmsid;
-// 	    flag_recv_bms[bmsid] |= (1 << pcsid_bms);
-// 		if (bms_data.bmsid == 0)
-// 		{
-
-// 			BamsTo61850(pcsid, p);
-// 			num_pcs1 = countPcsNum_Bms(flag_recv_bms[0]);
-// 		}
-// 		else
-// 		{
-
-// 			BamsTo61850(pcsid + 18, p);
-// 			num_pcs2 = (flag_recv_bms[1]);
-// 		}
-
-// 		myprintbuf(bms_data.lendata, bms_data.buf_data);
-// 		num_pcs = num_pcs1 + num_pcs2;
-// 		printf("61850接口收到来自bms数据 recvfromBams_ems pcsid=%d num_pcs=%d\n", pcsid, num_pcs);
-// 		if(num_pcs>=total_pcsnum)
-// 		{
-
-// 			flag_recv_bms[0] = 0;
-// 			flag_recv_bms[1] = 0;
-// 		   countSumAve_Send(bms_data.buf_data);
-
-// 	}
-// 	break;
-// 	case _SOC_:
-// 	{
-// 		short soc = *(short *)pdata;
-// 		printf("收到BAMS传来的soc数据！pcsid=%d soc=%d\n", pcsid, soc);
-// 	}
-// 	break;
-// 	default:
-// 		break;
-// 	}
-// 	return 0;
-// }
 int recvfromBams_ems(unsigned char pcsid, unsigned char type, void *pdata)
 {
 
