@@ -301,6 +301,8 @@ void *thread_61850_write(void *arg)
 					shm_addr->shm_que1.slist[j].el_tag = senddata.data_info[i].el_tag;
 					memcpy(shm_addr->shm_que1.slist[j].data, senddata.data_info[i].data, senddata.data_info[i].data_size);
 					shm_addr->shm_que1.wpos = (shm_addr->shm_que1.wpos + 1) % data_num;
+
+					printf(" 消息队列 发给 61850:%d %d %d %d data:%d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,senddata.data_info[i].data[0]);
 				}
 				sem_post(mutex1_lock);
 			}

@@ -447,12 +447,12 @@ void subscribeFromBams(void)
 	void *handle;
 	char *error;
 	static int yy = 0;
-#define LIB_BAMS_PATH "/usr/lib/libbams_rtu.so"
+#define LIB_BAMS_PATH "/usr/local/lib/libbams_rtu.so"
 	typedef int (*outBmsData2Other)(unsigned char, unsigned char, void *); //输出数据
 	typedef int (*in_fun)(unsigned char type, outBmsData2Other pfun);	   //命令处理函数指针
 	in_fun my_func = NULL;
 
-	printf("61850打开动态链接库 /usr/lib/libbams_rtu.so yy=%d\n", yy++);
+	printf("61850打开动态链接库 /usr/local/lib/libbams_rtu.so yy=%d\n", yy++);
 
 	handle = dlopen(LIB_BAMS_PATH, RTLD_LAZY);
 	if (!handle)

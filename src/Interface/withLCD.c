@@ -135,8 +135,8 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 	for (i = 0; i < 11; i++)
 	{
 		senddata.data_info[i].sAddr.portID = INFO_PCS;
-		senddata.data_info[i].sAddr.devID = lcdid * 6 + pcsid;
-		// senddata.data_info[i].sAddr.devID = sn+1;
+		// senddata.data_info[i].sAddr.devID = lcdid * 6 + pcsid;
+		senddata.data_info[i].sAddr.devID = sn+1;
 		senddata.data_info[i].sAddr.typeID = yc_realtime_tab[i].typeID;
 		senddata.data_info[i].sAddr.pointID = yc_realtime_tab[i].pointID;
 		senddata.data_info[i].data_size = yc_realtime_tab[i].data_size;
@@ -407,8 +407,8 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 	for (i = 0; i < temp.data_len/2; i++)
 	{
 		senddata.data_info[i].sAddr.portID = INFO_PCS;
-		senddata.data_info[i].sAddr.devID = temp.lcdid * 6 + temp.pcsid;
-		// senddata.data_info[i].sAddr.devID = temp.sn+1;
+		// senddata.data_info[i].sAddr.devID = temp.lcdid * 6 + temp.pcsid;
+		senddata.data_info[i].sAddr.devID = temp.sn+1;
 		senddata.data_info[i].sAddr.typeID = 2;
 		senddata.data_info[i].data_size = 2;
 		senddata.data_info[i].el_tag = _U_SHORT_;
@@ -731,9 +731,13 @@ void sendParaLcd(void)
 	senddata.data_info[i].sAddr.typeID = 2;		   // 数据标识3
 	senddata.data_info[i].sAddr.pointID = 0;	   // 数据标识4
 	senddata.data_info[i].data_size = 4;
-	*(int *)&senddata.data_info[0].data[0] = total_pcsnum;
+	senddata.data_info[i].el_tag = _INT_;
+
+
+	// *(int *)&senddata.data_info[0].data[0] = total_pcsnum;
+	*(int *)senddata.data_info[i].data = total_pcsnum;
 	printf("发送的数据 d %d %d \n", total_pcsnum, *(int *)&senddata.data_info[0].data);
-	senddata.data_info[0].el_tag = _INT_;
+	printf("pcs总数 发给 61850 遥信 标识:%d %d %d %d data:%d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,senddata.data_info[i].data[0]);
 
 	i++;
 
@@ -742,12 +746,13 @@ void sendParaLcd(void)
 	senddata.data_info[i].sAddr.devID = 1;
 	senddata.data_info[i].sAddr.typeID = 2;
 	senddata.data_info[i].sAddr.pointID = 1;
-
 	senddata.data_info[i].data_size = 4;
+	senddata.data_info[i].el_tag = _FLOAT_;
+	
 	*(float *)senddata.data_info[i].data = temp;
 
 	printf("发送的数据 f %f %f \n", temp, *(float *)senddata.data_info[i].data);
-	senddata.data_info[i].el_tag = _FLOAT_;
+	
 
 	// 每个LCD通信状态，PCS个数
 	for (j = 0; j < pFrome61850->lcdnum; j++)
@@ -817,7 +822,7 @@ void subscribeFromLcd(void)
 
 	void *handle;
 	char *error;
-#define LIB_LCD_PATH "/usr/lib/libmodtcp.so"
+#define LIB_LCD_PATH "/usr/local/lib/libmodtcp.so"
 	typedef int (*outData2Other)(unsigned char, void *);		   //输出数据
 	typedef int (*in_fun)(unsigned char type, outData2Other pfun); //命令处理函数指针
 

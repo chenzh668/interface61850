@@ -84,7 +84,7 @@ void subscribeFromPlc(void)
 
 	void *handle;
 	char *error;
-#define LIB_LCD_PATH "/usr/lib/libplc.so"
+#define LIB_LCD_PATH "/usr/local/lib/libplc.so"
 	// typedef int (*outData2Other)(unsigned char, void *);		   //输出数据
 	// typedef int (*in_fun)(unsigned char type, outData2Other pfun); //命令处理函数指针
 
