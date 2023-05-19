@@ -10,6 +10,8 @@
 #include "sys.h"
 #include "lib61850_main.h"
 
+#include <unistd.h>
+
 volatile PARA_61850 Frome61850;
 volatile PARA_61850 *pFrome61850 = (PARA_61850 *)&Frome61850;
 
@@ -814,8 +816,11 @@ void recvLcdPara(void *para)
 		total_pcsnum = 36;
 
 	printf("61850从主程序获得的参数 %d  %d total_pcs=%d\n", pFrome61850->lcdnum, pFrome61850->balance_rate, total_pcsnum);
-
-	sendParaLcd();
+	// sendParaLcd();
+	sleep(3);
+	for(i=0;i<5;i++){
+		sendParaLcd();
+	}
 }
 void subscribeFromLcd(void)
 {
@@ -829,6 +834,7 @@ void subscribeFromLcd(void)
 	in_fun my_func = NULL;
 	printf("订阅LCD数据！！！！\n");
 	//打开动态链接库
+
 
 	handle = dlopen(LIB_LCD_PATH, RTLD_LAZY);
 	if (!handle)
@@ -852,6 +858,7 @@ void subscribeFromLcd(void)
 		fprintf(stderr, "%s\n", error);
 		exit(EXIT_FAILURE);
 	}
+
 
 	printf("1订阅LCD数据！！！！\n");
 	my_func(_YC_, recvfromlcd);
