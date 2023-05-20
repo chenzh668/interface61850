@@ -76,6 +76,7 @@ typedef struct
 	int typeID;                                //数据标识3
 	int precision; //数据精度
 } SendTo61850;	   //
+
 typedef struct
 {
 	int pos_protocol; //协议中的位置

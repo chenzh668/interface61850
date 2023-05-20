@@ -318,15 +318,16 @@ static int countSumAve_yc_Send1(void)
 		if (pcs_fault_flag[i] != 0)
 			continue;
 		temp = (short)yc_data[i].pcs_data[DC_power_input];
-		if (temp > 0)
-		{
-			sum_pw += ((float)temp / 10);
-		}
-		else
-		{
-			temp = -temp;
-			sum_dpw += ((float)temp / 10);
-		}
+		sum_pw += ((float)temp / 10);
+		// if (temp > 0)
+		// {
+		// 	sum_pw += ((float)temp / 10);
+		// }
+		// else
+		// {
+		// 	temp = -temp;
+		// 	sum_dpw += ((float)temp / 10);
+		// }
 	}
 	senddata.num = 0;
 
@@ -343,16 +344,16 @@ static int countSumAve_yc_Send1(void)
 		senddata.num++;
 	}
 	//	if(sum_dpw>0)
-	{
-		senddata.data_info[senddata.num].sAddr.portID = INFO_EMU;
-		senddata.data_info[senddata.num].sAddr.devID = 1;
-		senddata.data_info[senddata.num].sAddr.typeID = 2;
-		senddata.data_info[senddata.num].data_size = 4;
-		senddata.data_info[senddata.num].el_tag = _FLOAT_;
-		senddata.data_info[senddata.num].sAddr.pointID = 5;
-		*(float *)&senddata.data_info[senddata.num].data[0] = sum_dpw;
-		senddata.num++;
-	}
+	// {
+	// 	senddata.data_info[senddata.num].sAddr.portID = INFO_EMU;
+	// 	senddata.data_info[senddata.num].sAddr.devID = 1;
+	// 	senddata.data_info[senddata.num].sAddr.typeID = 2;
+	// 	senddata.data_info[senddata.num].data_size = 4;
+	// 	senddata.data_info[senddata.num].el_tag = _FLOAT_;
+	// 	senddata.data_info[senddata.num].sAddr.pointID = 5;
+	// 	*(float *)&senddata.data_info[senddata.num].data[0] = sum_dpw;
+	// 	senddata.num++;
+	// }
 	ret = sendtotask(&senddata);
 
 	if (ret == 1)
@@ -627,11 +628,12 @@ int recvfromlcd(unsigned char type, void *pdata)
 		}
 
 		printf("收到遥测数据22 flag_recv_lcd:%d g_flag_RecvNeed_LCD:%d\n",flag_recv_lcd,g_flag_RecvNeed_LCD);
-		// if (flag_recv_lcd == pFrome61850->flag_RecvNeed_LCD)//上传平均值和总和值
-		if (flag_recv_lcd == g_flag_RecvNeed_LCD)
+		if (flag_recv_lcd == pFrome61850->flag_RecvNeed_LCD)//上传平均值和总和值
+		// if (flag_recv_lcd == g_flag_RecvNeed_LCD)
 		{
 			printf("上传平均值或总和值 flag_recv=%x\n", flag_recv_lcd);
 			countSumAve_yc_Send();
+			countSumAve_yc_Send1();
 			flag_recv_lcd = 0;
 		}
 	}
