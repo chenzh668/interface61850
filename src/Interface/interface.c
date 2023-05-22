@@ -123,8 +123,12 @@ void handleRecvFrom61850(data_info_t *pdata)
 	else if (temp.sAddr.portID == INFO_EMU && temp.sAddr.devID == 1 && temp.sAddr.typeID == 5)
 	{
 		k = 2;
-		para.item = temp.sAddr.pointID;
-		if (para.item >= 8 && para.item <= 13)
+		if(temp.sAddr.pointID == 16)
+			para.item = 18;
+		else
+			para.item = temp.sAddr.pointID;
+		
+		if ((para.item >= 8 && para.item <= 13)|| para.item == 18)
 			type = _BMS_PLC_YK_;
 		else
 			type = _BMS_YK_;

@@ -17,6 +17,13 @@
 #define Reactive_power 12 // 0x110C	"交流无功功率 int16	0.1kVar 正为感性，负为容性
 #define Apparent_power 13 // 0x110D	"交流视在功率 int16	0.1kVA  
 
+#define Accumulated_charging_capacity 19 //0x1113 累计充电量 uint32 0.1kWh
+#define Accumulated_discharge_capacity 21 //0x1115 累计放电量 uint32 0.1kWh
+#define Daily_charging_capacity 23 //0x1117 日充电量 uint32 0.1kWh 每日零点清零
+#define Daily_discharge_capacity 25 //0x1119 日放电量 uint32 0.1kWh 每日零点清零
+
+
+
 #define  DC_Bus_voltage_zj  0          //0x1174	  "母线电压"	整机	int16	0.1 V	R
 #define  DC_Bus_current_zj  1          // 0x1075    "母线电流"	整机	int16	0.1A	R
 #define  DC_power_input_zj  2          // 0x1076    "直流功率"	整机	int16	0.1 kW	R

@@ -73,7 +73,12 @@ SendTo61850 yc_realtime_tab[] = {
 	{Frequency, 8, _FLOAT_, 4, 2, 100},		 //电网频率
 	{Active_power, 9, _FLOAT_, 4, 2, 10},	 //交流有功功率
 	{Reactive_power, 10, _FLOAT_, 4, 2, 10}, //交流无功功率
-	{Apparent_power, 11, _FLOAT_, 4, 2, 10}	 //交流视在功率
+	{Apparent_power, 11, _FLOAT_, 4, 2, 10},	 //交流视在功率
+
+	{Accumulated_charging_capacity, 28, _FLOAT_, 4, 2, 10},	 //累计充电量
+	{Accumulated_discharge_capacity, 29, _FLOAT_, 4, 2, 10},	 //累计放电量
+	{Daily_charging_capacity, 30, _FLOAT_, 4, 2, 10},	 //日充电量
+	{Daily_discharge_capacity, 31, _FLOAT_, 4, 2, 10}	 //日放电量
 };
 
 SendTo61850 zjyc_realtime_tab[] = {
@@ -134,7 +139,16 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 	float temp;
 	short temp_i;
 
-	for (i = 0; i < 11; i++)
+	int temp_uint32;
+
+	printf("收到的pcs遥信：");
+	for(i=0;i<32;i++){
+		printf("%02x ",pdata[i]);
+	}
+	printf("\n");
+
+
+	for (i = 0; i < 15; i++)
 	{
 		senddata.data_info[i].sAddr.portID = INFO_PCS;
 		// senddata.data_info[i].sAddr.devID = lcdid * 6 + pcsid;
@@ -144,8 +158,26 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 		senddata.data_info[i].data_size = yc_realtime_tab[i].data_size;
 		senddata.data_info[i].el_tag = yc_realtime_tab[i].el_tag;
 
-		if (yc_realtime_tab[i].el_tag == _FLOAT_)
-		{
+		// if (yc_realtime_tab[i].el_tag == _FLOAT_)
+		// {
+		// 	b1 = pdata[yc_realtime_tab[i].pos_protocol] / 256;
+		// 	b2 = pdata[yc_realtime_tab[i].pos_protocol] % 256;
+		// 	temp_i = b2 * 256 + b1;
+		// 	temp = (float)temp_i / yc_realtime_tab[i].precision;
+		// 	*(float *)&senddata.data_info[i].data = temp;
+		// }
+
+		if(yc_realtime_tab[i].pos_protocol == Accumulated_charging_capacity ||yc_realtime_tab[i].pos_protocol == Accumulated_discharge_capacity || \
+		yc_realtime_tab[i].pos_protocol == Daily_charging_capacity || yc_realtime_tab[i].pos_protocol == Daily_discharge_capacity){
+
+			// b1 = pdata[yc_realtime_tab[i].pos_protocol] / 256;
+			// b2 = pdata[yc_realtime_tab[i].pos_protocol] % 256;
+			temp_uint32 = ((((pdata[yc_realtime_tab[i].pos_protocol]%256)*256)+ (pdata[yc_realtime_tab[i].pos_protocol] / 256))<< 16)|(((pdata[yc_realtime_tab[i].pos_protocol+1]%256)*256)+ (pdata[yc_realtime_tab[i].pos_protocol+1] / 256));
+			printf("aaaa 发给 61850 遥测 标识:%d %d %d %d  temp_uint32:%d  pdata[%d]：%d %d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,temp_uint32, yc_realtime_tab[i].pos_protocol,pdata[yc_realtime_tab[i].pos_protocol],pdata[yc_realtime_tab[i].pos_protocol+1]);
+			temp = (float)temp_uint32 / yc_realtime_tab[i].precision;
+			*(float *)&senddata.data_info[i].data = temp;
+
+		}else{
 			b1 = pdata[yc_realtime_tab[i].pos_protocol] / 256;
 			b2 = pdata[yc_realtime_tab[i].pos_protocol] % 256;
 			temp_i = b2 * 256 + b1;
@@ -154,7 +186,7 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 		}
 		 printf("发给 61850 遥测 标识:%d %d %d %d data:%f\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,temp);
 	}
-	senddata.num = 11;
+	senddata.num = 15;
 	ret = sendtotask(&senddata);
 	return ret;
 }

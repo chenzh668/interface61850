@@ -72,6 +72,19 @@ int recvfromplc(unsigned char type, void *pdata)
 			senddata.data_info[i].el_tag = _BOOL_;
 		}
 
+		i++;
+		senddata.data_info[i].sAddr.portID = 1;
+		senddata.data_info[i].sAddr.devID = 1;
+		senddata.data_info[i].sAddr.typeID = 1;
+		senddata.data_info[i].sAddr.pointID = 16;
+		senddata.data_info[i].data_size = 1;
+		senddata.data_info[i].el_tag = _BOOL_;
+		if ((temp & (1 << 0)) > 0){
+			senddata.data_info[i].data[0] = 1;
+		}else{
+			senddata.data_info[i].data[0] = 0;
+		}	
+
 		senddata.num = i;
 		ret = sendtotask(&senddata);
 		temp_last = temp;
