@@ -343,27 +343,31 @@ static int countSumAve_yc_Send1(void)
 	float sum_pw = 0;
 	short temp;
 	int i;
+	unsigned char b1,b2;
 	MyData senddata;
 	int ret;
 	for (i = 0; i < total_pcsnum; i++)
 	{
 		if (pcs_fault_flag[i] != 0)
 			continue;
-		temp = (short)yc_data[i].pcs_data[DC_power_input];
-		sum_pw += ((float)temp / 10);
-		// if (temp > 0)
-		// {
-		// 	sum_pw += ((float)temp / 10);
-		// }
-		// else
-		// {
-		// 	temp = -temp;
-		// 	sum_dpw += ((float)temp / 10);
-		// }
+		// temp = (short)yc_data[i].pcs_data[DC_power_input];
+		b1 = yc_data[i].pcs_data[DC_power_input] / 256;
+		b2 = yc_data[i].pcs_data[DC_power_input] % 256;
+		temp = (short)(b2*256+b1);
+		printf("aa temp:%d \n",temp);
+		if (temp > 0)
+		{
+			sum_pw += ((float)temp / 10);
+		}
+		else
+		{
+			temp = -temp;
+			sum_dpw += ((float)temp / 10);
+		}
 	}
 	senddata.num = 0;
 
-	//	if(sum_pw>0)
+	if(sum_pw>0)
 	{
 
 		senddata.data_info[senddata.num].sAddr.portID = INFO_EMU;
@@ -375,17 +379,17 @@ static int countSumAve_yc_Send1(void)
 		*(float *)&senddata.data_info[senddata.num].data[0] = sum_pw;
 		senddata.num++;
 	}
-	//	if(sum_dpw>0)
-	// {
-	// 	senddata.data_info[senddata.num].sAddr.portID = INFO_EMU;
-	// 	senddata.data_info[senddata.num].sAddr.devID = 1;
-	// 	senddata.data_info[senddata.num].sAddr.typeID = 2;
-	// 	senddata.data_info[senddata.num].data_size = 4;
-	// 	senddata.data_info[senddata.num].el_tag = _FLOAT_;
-	// 	senddata.data_info[senddata.num].sAddr.pointID = 5;
-	// 	*(float *)&senddata.data_info[senddata.num].data[0] = sum_dpw;
-	// 	senddata.num++;
-	// }
+	if(sum_dpw>0)
+	{
+		senddata.data_info[senddata.num].sAddr.portID = INFO_EMU;
+		senddata.data_info[senddata.num].sAddr.devID = 1;
+		senddata.data_info[senddata.num].sAddr.typeID = 2;
+		senddata.data_info[senddata.num].data_size = 4;
+		senddata.data_info[senddata.num].el_tag = _FLOAT_;
+		senddata.data_info[senddata.num].sAddr.pointID = 4;
+		*(float *)&senddata.data_info[senddata.num].data[0] = sum_dpw;
+		senddata.num++;
+	}
 	ret = sendtotask(&senddata);
 
 	if (ret == 1)
@@ -659,7 +663,7 @@ int recvfromlcd(unsigned char type, void *pdata)
 			flag_recv_pcs[temp.lcdid] = 0;
 		}
 
-		printf("收到遥测数据22 flag_recv_lcd:%d g_flag_RecvNeed_LCD:%d\n",flag_recv_lcd,g_flag_RecvNeed_LCD);
+		printf("收到遥测数据22 flag_recv_lcd:%d pFrome61850->flag_RecvNeed_LCD:%d\n",flag_recv_lcd,pFrome61850->flag_RecvNeed_LCD);
 		if (flag_recv_lcd == pFrome61850->flag_RecvNeed_LCD)//上传平均值和总和值
 		// if (flag_recv_lcd == g_flag_RecvNeed_LCD)
 		{
@@ -851,8 +855,9 @@ void recvLcdPara(void *para)
 
 	printf("61850从主程序获得的参数 %d  %d total_pcs=%d\n", pFrome61850->lcdnum, pFrome61850->balance_rate, total_pcsnum);
 	// sendParaLcd();
-	sleep(3);
+
 	for(i=0;i<5;i++){
+		sleep(1);
 		sendParaLcd();
 	}
 }
