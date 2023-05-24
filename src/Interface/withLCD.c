@@ -299,15 +299,15 @@ static int countSumAve_yc_Send(void)
 		for (j = 0; j < total_pcsnum; j++)
 		{
 
-			// if (pcs_fault_flag[j] == 0)
-			// {
+			if (pcs_fault_flag[j] == 0)
+			{
 				b1 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] % 256;
 				b2 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] / 256;
 				pcsData=b1 * 256 + b2;
 				sumdata[i] += (int)pcsData;
-			// }
-			// else   
-			// 	m++;
+			}
+			else   
+				m++;
 		}
 	}
 
