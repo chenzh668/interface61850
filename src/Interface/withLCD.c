@@ -22,7 +22,7 @@ LCD_YC_YX_DATA zjyx_data[MAX_LCD_NUM];
 unsigned int Yx_Pcs_Status = 0;
 unsigned char flag_RecvNeed_PCS[]={0,0,0,0,0,0};
 // int _Reactive_power_zj; //整机无功  用于可增无功、可减无功
-
+void sendParaLcd(void);
 
 YKOrder ykOrder_61850 = NULL;
 unsigned char yc_Send_Flag[][4] = {
@@ -109,9 +109,9 @@ SendTo61850_count yc_count_tab[] = {
 	{Phase_C_current, 13, _FLOAT_, 4, 2, 10, 1},
 	{Power_factor, 14, _FLOAT_, 4, 2, 1000, 0}, //功率因数
 	{Frequency, 15, _FLOAT_, 4, 2, 100, 2},		//电网频率
-	{Active_power, 16, _FLOAT_, 4, 2, 10, 2},	//交流有功功率
-	{Reactive_power, 17, _FLOAT_, 4, 2, 10, 2}, //交流无功功率
-	{Apparent_power, 18, _FLOAT_, 4, 2, 10, 2}, //交流视在功率
+	{Active_power, 16, _FLOAT_, 4, 2, 10, 1},	//交流有功功率
+	{Reactive_power, 17, _FLOAT_, 4, 2, 10, 1}, //交流无功功率
+	{Apparent_power, 18, _FLOAT_, 4, 2, 10, 1}, //交流视在功率
 	{DC_power_input, 19, _FLOAT_, 4, 2, 10, 1}	//
 
 };
@@ -188,6 +188,7 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 	}
 	senddata.num = 15;
 	ret = sendtotask(&senddata);
+	sendParaLcd();
 	return ret;
 }
 
@@ -217,8 +218,9 @@ static int countSumAve_zjyc_Send(void)
 
 	for (i = 0; i < n; i++)
 	{
-		if (zjyc_realtime_tab[i].pos_protocol == Active_power_zj)
+		if (zjyc_realtime_tab[i].pos_protocol == Active_power_zj){
 			temp = data_Active_power;
+		}
 		else if (zjyc_realtime_tab[i].pos_protocol == Reactive_power_zj){
 			temp = data_Reactive_power;
 			// _Reactive_power_zj = data_Reactive_power;
@@ -236,7 +238,7 @@ static int countSumAve_zjyc_Send(void)
 		senddata.data_info[i].data_size = 4;
 		senddata.data_info[i].el_tag = _FLOAT_;
 		senddata.data_info[i].sAddr.pointID = zjyc_realtime_tab[i].pointID;
-
+		
 		//可增无功
 		if(zjyc_realtime_tab[i].pointID == 20){
 			for (j = 0; j < total_pcsnum; j++)
@@ -249,12 +251,15 @@ static int countSumAve_zjyc_Send(void)
 			// *(float *)&senddata.data_info[senddata.num].data[0] = ((float)temp) / zjyc_realtime_tab[i].precision;
 			*(float *)&senddata.data_info[i].data[0] = ((float)temp) / zjyc_realtime_tab[i].precision;
 		}
+
+		
+
 		
 	}
 
+	
 	senddata.num = n;
 	ret = sendtotask(&senddata);
-
 	if (ret == 1)
 	{
 		printf("1充放电数据上传成功！！！\n");
@@ -268,7 +273,8 @@ static int countSumAve_zjyc_Send(void)
 
 static int countSumAve_yc_Send(void)
 {
-	int sumdata[20];
+	int sumdata[20]={0};
+	
 	int i, j;
 	// int margin;
 	MyData senddata;
@@ -277,6 +283,8 @@ static int countSumAve_yc_Send(void)
 	float temp;
 	unsigned char b1, b2;
 	int ret;
+
+	short pcsData;
 	for (i = 0; i < 20; i++)
 	{
 		sumdata[i] = 0;
@@ -291,14 +299,15 @@ static int countSumAve_yc_Send(void)
 		for (j = 0; j < total_pcsnum; j++)
 		{
 
-			if (pcs_fault_flag[j] == 0)
-			{
+			// if (pcs_fault_flag[j] == 0)
+			// {
 				b1 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] % 256;
 				b2 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] / 256;
-				sumdata[i] += (int)(b1 * 256 + b2);
-			}
-			else
-				m++;
+				pcsData=b1 * 256 + b2;
+				sumdata[i] += (int)pcsData;
+			// }
+			// else   
+			// 	m++;
 		}
 	}
 
@@ -320,11 +329,15 @@ static int countSumAve_yc_Send(void)
 		senddata.data_info[i].sAddr.pointID = yc_count_tab[i].pointID;
 		if (yc_count_tab[i].el_tag == _FLOAT_)
 		{
+			printf("整机遥信: %d %d ",i,sumdata[i]);
 			temp = (float)sumdata[i] / yc_realtime_tab[i].precision;
 			*(float *)&senddata.data_info[i].data[0] = temp;
 		}
+		
+		printf("整机遥信 发送给61850的 %d %d %d %d val:%f\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,*(float *)&senddata.data_info[i].data[0]);
 	}
 	senddata.num = n;
+
 	// margin = Ave_Max_PW * (total_pcsnum - m) - sumdata[10];
 	ret = sendtotask(&senddata);
 
@@ -354,7 +367,7 @@ static int countSumAve_yc_Send1(void)
 		b1 = yc_data[i].pcs_data[DC_power_input] / 256;
 		b2 = yc_data[i].pcs_data[DC_power_input] % 256;
 		temp = (short)(b2*256+b1);
-		printf("aa temp:%d \n",temp);
+		// printf("aa temp:%d \n",temp);
 		if (temp > 0)
 		{
 			sum_pw += ((float)temp / 10);
@@ -365,6 +378,8 @@ static int countSumAve_yc_Send1(void)
 			sum_dpw += ((float)temp / 10);
 		}
 	}
+
+	printf("sum_pw:%f  sum_dpw:%f \n",sum_pw,sum_dpw);
 	senddata.num = 0;
 
 	if(sum_pw>0)
@@ -854,12 +869,9 @@ void recvLcdPara(void *para)
 		total_pcsnum = 36;
 
 	printf("61850从主程序获得的参数 %d  %d total_pcs=%d\n", pFrome61850->lcdnum, pFrome61850->balance_rate, total_pcsnum);
-	// sendParaLcd();
+	sendParaLcd();
 
-	for(i=0;i<5;i++){
-		sleep(1);
-		sendParaLcd();
-	}
+	
 }
 void subscribeFromLcd(void)
 {
