@@ -293,7 +293,6 @@ static int countSumAve_yc_Send(void)
 	{
 		if (yc_count_tab[i].flag == 0)
 		{
-
 			continue;
 		}
 		for (j = 0; j < total_pcsnum; j++)
@@ -301,22 +300,34 @@ static int countSumAve_yc_Send(void)
 
 			if (pcs_fault_flag[j] == 0)
 			{
+				// printf("dsfsdfd收到的 a相：%d %d %d\n",yc_data[j].pcs_data[3],yc_data[j].pcs_data[4],yc_data[j].pcs_data[5]);
 				b1 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] % 256;
 				b2 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] / 256;
 				pcsData=b1 * 256 + b2;
 				sumdata[i] += (int)pcsData;
+				// if(yc_count_tab[i].pos_protocol == 3 || yc_count_tab[i].pos_protocol == 4 || yc_count_tab[i].pos_protocol==5){
+				// 	printf("dsfsdfd收到的 pcsData:%d %d\n",pcsData,sumdata[i]);
+				// }
 			}
-			else   
-				m++;
 		}
+	
 	}
+
+	for (i = 0; i < total_pcsnum; i++){
+		if (pcs_fault_flag[i] == 1){
+			m++;
+		}	
+	}
+
 
 	for (i = 0; i < n; i++)
 	{
-
-		if (yc_count_tab[i].flag == 2) //求平均
-		{
-			sumdata[i] /= (total_pcsnum - m); // yc_count_tab[i].precision;
+		if((total_pcsnum - m) != 0){
+			if (yc_count_tab[i].flag == 2) //求平均
+			{
+				sumdata[i] /= (total_pcsnum - m); // yc_count_tab[i].precision;
+				// sumdata[i] /= (total_pcsnum - 14);
+			}	
 		}
 	}
 	for (i = 0; i < n; i++)
@@ -329,12 +340,13 @@ static int countSumAve_yc_Send(void)
 		senddata.data_info[i].sAddr.pointID = yc_count_tab[i].pointID;
 		if (yc_count_tab[i].el_tag == _FLOAT_)
 		{
-			printf("整机遥信: %d %d ",i,sumdata[i]);
+			// printf("整机遥信: %d %d ",i,sumdata[i]);
 			temp = (float)sumdata[i] / yc_realtime_tab[i].precision;
 			*(float *)&senddata.data_info[i].data[0] = temp;
 		}
 		
-		printf("整机遥信 发送给61850的 %d %d %d %d val:%f\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,*(float *)&senddata.data_info[i].data[0]);
+		// printf("aaaaa \n");
+		// printf(" 整机遥测 发送给61850的 %d %d %d %d val:%f\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,*(float *)&senddata.data_info[i].data[0]);
 	}
 	senddata.num = n;
 
