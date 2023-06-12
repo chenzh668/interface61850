@@ -14,7 +14,7 @@ int recvfromplc(unsigned char type, void *pdata)
 	unsigned short temp = *(unsigned short *)pdata;
 	int ret = 0;
 	MyData senddata;
-	int i;
+	int i,a;
 	printf("61850接口模块收到 backYkFromLcd type=%d data=%x\n", type, temp);
 	// if (temp_last != temp)
 	{
@@ -72,7 +72,6 @@ int recvfromplc(unsigned char type, void *pdata)
 			senddata.data_info[i].el_tag = _BOOL_;
 		}
 
-		i++;
 		senddata.data_info[i].sAddr.portID = 1;
 		senddata.data_info[i].sAddr.devID = 1;
 		senddata.data_info[i].sAddr.typeID = 1;
@@ -84,6 +83,12 @@ int recvfromplc(unsigned char type, void *pdata)
 		}else{
 			senddata.data_info[i].data[0] = 0;
 		}	
+
+		i++;
+		for(a = 0;a<i;a++){
+			printf("PLC 61850 通讯标识 %d %d %d %d val：%x \n",	senddata.data_info[a].sAddr.portID,senddata.data_info[a].sAddr.devID,senddata.data_info[a].sAddr.typeID,senddata.data_info[a].sAddr.pointID,senddata.data_info[a].data[0]);
+		}
+		
 
 		senddata.num = i;
 		ret = sendtotask(&senddata);
