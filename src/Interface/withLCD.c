@@ -141,10 +141,10 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 
 	int temp_uint32;
 
-	printf("收到的pcs遥信：");
-	for(i=0;i<32;i++){
-		printf("%02x ",pdata[i]);
-	}
+	// printf("收到的pcs遥信：");
+	// for(i=0;i<32;i++){
+	// 	printf("%02x ",pdata[i]);
+	// }
 	printf("\n");
 
 
@@ -173,9 +173,9 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 			// b1 = pdata[yc_realtime_tab[i].pos_protocol] / 256;
 			// b2 = pdata[yc_realtime_tab[i].pos_protocol] % 256;
 			temp_uint32 = ((((pdata[yc_realtime_tab[i].pos_protocol]%256)*256)+ (pdata[yc_realtime_tab[i].pos_protocol] / 256))<< 16)|(((pdata[yc_realtime_tab[i].pos_protocol+1]%256)*256)+ (pdata[yc_realtime_tab[i].pos_protocol+1] / 256));
-			printf("aaaa 发给 61850 遥测 标识:%d %d %d %d  temp_uint32:%d  pdata[%d]：%d %d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,temp_uint32, yc_realtime_tab[i].pos_protocol,pdata[yc_realtime_tab[i].pos_protocol],pdata[yc_realtime_tab[i].pos_protocol+1]);
 			temp = (float)temp_uint32 / yc_realtime_tab[i].precision;
 			*(float *)&senddata.data_info[i].data = temp;
+			printf("发给 61850 遥测 标识:%d %d %d %d  data:%f \n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,temp);
 
 		}else{
 			b1 = pdata[yc_realtime_tab[i].pos_protocol] / 256;
@@ -188,7 +188,6 @@ int LcdTo61850_YC(unsigned char lcdid, unsigned char pcsid, unsigned short *pdat
 	}
 	senddata.num = 15;
 	ret = sendtotask(&senddata);
-	sendParaLcd();
 	return ret;
 }
 
@@ -391,7 +390,7 @@ static int countSumAve_yc_Send1(void)
 		}
 	}
 
-	printf("sum_pw:%f  sum_dpw:%f \n",sum_pw,sum_dpw);
+	// printf("sum_pw:%f  sum_dpw:%f \n",sum_pw,sum_dpw);
 	senddata.num = 0;
 
 	if(sum_pw>0)
@@ -421,10 +420,10 @@ static int countSumAve_yc_Send1(void)
 
 	if (ret == 1)
 	{
-		printf("1充放电数据上传成功！！！\n");
+		printf("61850模块 emu->61850  1充放电数据上传成功！！！\n");
 	}
 	else
-		printf("2充放电数据上传成功失败！！！\n");
+		printf("61850模块 emu->61850 2充放电数据上传成功失败！！！\n");
 
 	return 0;
 }
@@ -437,8 +436,8 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 	int i;
 	int base = 12;
 	int ret;
-	printf("LcdTo61850_YX收到遥信数据  lcdid=%d  pcsid_lcd=%d sn=%d data_len:%d\n", temp.lcdid, temp.pcsid, temp.sn,temp.data_len);
-	printf("pcs 遥信 变流运行状态1:%d 变流器状态字1:%d 输入状态:%d \n",temp.pcs_data[u16_InvRunState1],temp.pcs_data[st_FlagSciSystemState1],temp.pcs_data[st_FlagInput]);
+	// printf("LcdTo61850_YX收到遥信数据  lcdid=%d  pcsid_lcd=%d sn=%d data_len:%d\n", temp.lcdid, temp.pcsid, temp.sn,temp.data_len);
+	// printf("pcs 遥信 变流运行状态1:%d 变流器状态字1:%d 输入状态:%d \n",temp.pcs_data[u16_InvRunState1],temp.pcs_data[st_FlagSciSystemState1],temp.pcs_data[st_FlagInput]);
 	
 	//pcs故障
 	if((temp.pcs_data[u16_InvRunState1] & (1 << bFaultStatus )) != 0)
@@ -489,10 +488,10 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 
 	if (ret == 1)
 	{
-		printf("遥信实时数据上传成功！！！\n");
+		printf("61850模块 emu->61850 遥信实时数据上传成功！！！\n");
 	}
 	else
-		printf("遥信实时数据上传成功失败！！！\n");
+		printf("61850模块 emu->61850 遥信实时数据上传成功失败！！！\n");
 
 	return 0;
 }
@@ -699,7 +698,7 @@ int recvfromlcd(unsigned char type, void *pdata)
 		yc_data[temp.sn] = temp;
 
 
-		printf("收到遥测数据  sn=%d  lcdid=%d  pcsid_lcd=%d\n", temp.sn, temp.lcdid, temp.pcsid);
+		printf("61850模块 收到遥测数据  sn=%d  lcdid=%d  pcsid_lcd=%d\n", temp.sn, temp.lcdid, temp.pcsid);
 		// Apparent_power=Yc_PW_Data[temp.sn-1];
 		// if (pcs_fault_flag[temp.sn] == 0)
 		{
@@ -715,13 +714,14 @@ int recvfromlcd(unsigned char type, void *pdata)
 			flag_recv_pcs[temp.lcdid] = 0;
 		}
 
-		printf("收到遥测数据22 flag_recv_lcd:%d pFrome61850->flag_RecvNeed_LCD:%d\n",flag_recv_lcd,pFrome61850->flag_RecvNeed_LCD);
+		// printf("收到遥测数据22 flag_recv_lcd:%d pFrome61850->flag_RecvNeed_LCD:%d\n",flag_recv_lcd,pFrome61850->flag_RecvNeed_LCD);
 		if (flag_recv_lcd == pFrome61850->flag_RecvNeed_LCD)//上传平均值和总和值
 		// if (flag_recv_lcd == g_flag_RecvNeed_LCD)
 		{
-			printf("上传平均值或总和值 flag_recv=%x\n", flag_recv_lcd);
+			printf("61850模块 emu->61850 上传平均值或总和值\n");
 			countSumAve_yc_Send();
 			countSumAve_yc_Send1();
+			sendParaLcd();
 			flag_recv_lcd = 0;
 		}
 	}
@@ -729,16 +729,14 @@ int recvfromlcd(unsigned char type, void *pdata)
 	
 	case _YX_:
 	{
-		printf("recvfromlcd收到遥信数据\n");
 		LCD_YC_YX_DATA temp;
 		temp = *(LCD_YC_YX_DATA *)pdata;
-		printf("61850 aaa 收到遥信数据  sn=%d  lcdid=%d  pcsid_lcd=%d\n", temp.sn, temp.lcdid, temp.pcsid);
+		printf("61850模块 收到遥信数据  sn=%d  lcdid=%d  pcsid_lcd=%d 变流运行状态1:%d\n", temp.sn, temp.lcdid, temp.pcsid,temp.pcs_data[u16_InvRunState1]);
 		static unsigned char flag_recv_pcs[] = {0, 0, 0, 0, 0, 0};
 		static int flag_recv_lcd = 0;
 
 		flag_recv_pcs[temp.lcdid] |= (1 << (temp.pcsid - 1));
 		LcdTo61850_YX((LCD_YC_YX_DATA *)pdata);
-		printf("recvfromlcd收到遥信数据aaaaaaaaaa\n");
 		if (flag_recv_pcs[temp.lcdid] == flag_RecvNeed_PCS[temp.lcdid])
 		{
 
@@ -746,43 +744,43 @@ int recvfromlcd(unsigned char type, void *pdata)
 			flag_recv_pcs[temp.lcdid] = 0;
 		}
 
-		printf("recvfromlcd收到遥信数据22 flag_recv_lcd:%d g_flag_RecvNeed_LCD:%d  Frome61850.flag_RecvNeed_LCD:%d Frome61850.lcdnum:%d\n",flag_recv_lcd,g_flag_RecvNeed_LCD,Frome61850.flag_RecvNeed_LCD,Frome61850.lcdnum);
+		// printf("recvfromlcd收到遥信数据22 flag_recv_lcd:%d g_flag_RecvNeed_LCD:%d  Frome61850.flag_RecvNeed_LCD:%d Frome61850.lcdnum:%d\n",flag_recv_lcd,g_flag_RecvNeed_LCD,Frome61850.flag_RecvNeed_LCD,Frome61850.lcdnum);
 		if (flag_recv_lcd == pFrome61850->flag_RecvNeed_LCD)//上传平均值和总和值	// if (flag_recv_lcd == g_flag_RecvNeed_LCD)
 		{
-			printf("上传平均值或总和值 flag_recv_lcd=%x\n", flag_recv_lcd);
+			printf("61850模块 emu->61850 上传平均值或总和值\n");
 			YX_ztMsg_Send();
 			flag_recv_lcd = 0;
 		}
 	}
 	break;
 
-	case _ZJYX_:
-	{
-		LCD_YC_YX_DATA temp;
-		static unsigned int flag_recv = 0;
-		temp = *(LCD_YC_YX_DATA *)pdata;
-		flag_recv |= (1 << (temp.lcdid - 1));
-		zjyx_data[temp.lcdid - 1] = temp;
+	// case _ZJYX_:
+	// {
+	// 	LCD_YC_YX_DATA temp;
+	// 	static unsigned int flag_recv = 0;
+	// 	temp = *(LCD_YC_YX_DATA *)pdata;
+	// 	flag_recv |= (1 << (temp.lcdid - 1));
+	// 	zjyx_data[temp.lcdid - 1] = temp;
 
-		printf("接收到整机遥信！！！！\n");
-	}
-	break;
+	// 	printf("接收到整机遥信！！！！\n");
+	// }
+	// break;
 
-	case _ZJYC_:
-	{
+	// case _ZJYC_:
+	// {
 
-		LCD_YC_YX_DATA temp;
-		static unsigned int flag_recv = 0;
-		temp = *(LCD_YC_YX_DATA *)pdata;
-		flag_recv |= (1 << (temp.lcdid - 1));
-		zjyc_data[temp.lcdid - 1] = temp;
-		// if (flag_recv == g_flag_RecvNeed_LCD)
-		// {
-		// }
+	// 	LCD_YC_YX_DATA temp;
+	// 	static unsigned int flag_recv = 0;
+	// 	temp = *(LCD_YC_YX_DATA *)pdata;
+	// 	flag_recv |= (1 << (temp.lcdid - 1));
+	// 	zjyc_data[temp.lcdid - 1] = temp;
+	// 	// if (flag_recv == g_flag_RecvNeed_LCD)
+	// 	// {
+	// 	// }
 
-		printf("接收到整机遥测！！！！\n");
-	}
-	break;
+	// 	printf("接收到整机遥测！！！！\n");
+	// }
+	// break;
 		// case _PARA_:
 		// {
 
@@ -816,8 +814,7 @@ void sendParaLcd(void)
 
 	// *(int *)&senddata.data_info[0].data[0] = total_pcsnum;
 	*(int *)senddata.data_info[i].data = total_pcsnum;
-	printf("发送的数据 d %d %d \n", total_pcsnum, *(int *)&senddata.data_info[0].data);
-	printf("pcs总数 发给 61850 遥信 标识:%d %d %d %d data:%d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,senddata.data_info[i].data[0]);
+	printf("61850模块 pcs总数 标识:%d %d %d %d data:%d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,senddata.data_info[i].data[0]);
 
 	i++;
 
@@ -831,9 +828,8 @@ void sendParaLcd(void)
 	
 	*(float *)senddata.data_info[i].data = temp;
 
-	printf("发送的数据 f %f %f \n", temp, *(float *)senddata.data_info[i].data);
+	printf("61850模块 均衡速度 标识:%d %d %d %d data:%f\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,*(float *)senddata.data_info[i].data);
 	
-
 	// 每个LCD通信状态，PCS个数
 	for (j = 0; j < pFrome61850->lcdnum; j++)
 	{
@@ -865,10 +861,10 @@ void sendParaLcd(void)
 
 	if (ret == 1)
 	{
-		printf("LCD参数上传成功！！！\n");
+		printf("61850模块 emu->61850 LCD参数上传成功！！！\n");
 	}
 	else
-		printf("LCD参数上传成功失败！！！\n");
+		printf("61850模块 emu->61850 LCD参数上传成功失败！！！\n");
 }
 
 void recvLcdPara(void *para)
@@ -877,7 +873,7 @@ void recvLcdPara(void *para)
 
 	memcpy((unsigned char *)pFrome61850, (unsigned char *)para, sizeof(PARA_61850));
 
-	printf("从主程序获得的参数 %d  %d\n", pFrome61850->lcdnum, pFrome61850->balance_rate);
+	printf("61850模块 从主程序获得的参数 %d  %d\n", pFrome61850->lcdnum, pFrome61850->balance_rate);
 	for (i = 0; i < pFrome61850->lcdnum; i++)
 	{
 		total_pcsnum += pFrome61850->pcsnum[i];
@@ -895,8 +891,6 @@ void recvLcdPara(void *para)
 
 	printf("61850从主程序获得的参数 %d  %d total_pcs=%d\n", pFrome61850->lcdnum, pFrome61850->balance_rate, total_pcsnum);
 	sendParaLcd();
-
-	
 }
 void subscribeFromLcd(void)
 {
