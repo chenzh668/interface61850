@@ -107,8 +107,8 @@ SendTo61850_count yc_count_tab[] = {
 	{Phase_A_current, 11, _FLOAT_, 4, 2, 10, 1},
 	{Phase_B_current, 12, _FLOAT_, 4, 2, 10, 1},
 	{Phase_C_current, 13, _FLOAT_, 4, 2, 10, 1},
-	{Power_factor, 14, _FLOAT_, 4, 2, 1000, 0}, //功率因数
-	{Frequency, 15, _FLOAT_, 4, 2, 100, 2},		//电网频率
+	{Frequency, 14, _FLOAT_, 4, 2, 100, 2},		//电网频率
+	{Power_factor, 15, _FLOAT_, 4, 2, 1000, 0}, //功率因数
 	{Active_power, 16, _FLOAT_, 4, 2, 10, 1},	//交流有功功率
 	{Reactive_power, 17, _FLOAT_, 4, 2, 10, 1}, //交流无功功率
 	{Apparent_power, 18, _FLOAT_, 4, 2, 10, 1}, //交流视在功率
@@ -296,17 +296,29 @@ static int countSumAve_yc_Send(void)
 		}
 		for (j = 0; j < total_pcsnum; j++)
 		{
-
 			if (pcs_fault_flag[j] == 0)
 			{
-				// printf("dsfsdfd收到的 a相：%d %d %d\n",yc_data[j].pcs_data[3],yc_data[j].pcs_data[4],yc_data[j].pcs_data[5]);
 				b1 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] % 256;
 				b2 = yc_data[j].pcs_data[yc_count_tab[i].pos_protocol] / 256;
 				pcsData=b1 * 256 + b2;
 				sumdata[i] += (int)pcsData;
-				// if(yc_count_tab[i].pos_protocol == 3 || yc_count_tab[i].pos_protocol == 4 || yc_count_tab[i].pos_protocol==5){
+				// if(yc_count_tab[i].pos_protocol == Line_AB_voltage || yc_count_tab[i].pos_protocol == Line_BC_voltage || yc_count_tab[i].pos_protocol==Line_CA_voltage){
 				// 	printf("dsfsdfd收到的 pcsData:%d %d\n",pcsData,sumdata[i]);
 				// }
+				#if 1
+				if(yc_count_tab[i].pos_protocol == Line_AB_voltage){
+					printf("61850 收到的 电网AB线电压 pcs_sn:%d pcsData%d sumdata[%d]%d\n",j,pcsData,i,sumdata[i]);
+				}
+				if(yc_count_tab[i].pos_protocol == Line_BC_voltage){
+					printf("61850 收到的 电网BC线电压 pcs_sn:%d pcsData%d sumdata[%d]%d\n",j,pcsData,i,sumdata[i]);
+				}
+				if(yc_count_tab[i].pos_protocol == Line_CA_voltage){
+					printf("61850 收到的 电网CA线电压 pcs_sn:%d pcsData%d sumdata[%d]%d\n",j,pcsData,i,sumdata[i]);
+				}
+					if(yc_count_tab[i].pos_protocol == Frequency){
+					printf("61850 收到的 电网频率 pcs_sn:%d pcsData%d sumdata[%d]%d\n",j,pcsData,i,sumdata[i]);
+				}
+				#endif
 			}
 		}
 	
@@ -326,9 +338,11 @@ static int countSumAve_yc_Send(void)
 			{
 				sumdata[i] /= (total_pcsnum - m); // yc_count_tab[i].precision;
 				// sumdata[i] /= (total_pcsnum - 14);
+				printf("需要求平均的数据：%d  \n",sumdata[i]);
 			}	
 		}
 	}
+
 	for (i = 0; i < n; i++)
 	{
 		senddata.data_info[i].sAddr.portID = INFO_EMU;
@@ -345,7 +359,7 @@ static int countSumAve_yc_Send(void)
 		}
 		
 		// printf("aaaaa \n");
-		// printf(" 整机遥测 发送给61850的 %d %d %d %d val:%f\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,*(float *)&senddata.data_info[i].data[0]);
+		printf(" 整机遥测 发送给61850的 %d %d %d %d val:%f\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,*(float *)&senddata.data_info[i].data[0]);
 	}
 	senddata.num = n;
 
@@ -567,6 +581,7 @@ static int LcdTo61850_YX(LCD_YC_YX_DATA *pdata)
 // 	return 0;
 // }
 
+
 static int YX_ztMsg_Send(void){
 		MyData senddata;
 		int i,j,ret;
@@ -575,10 +590,9 @@ static int YX_ztMsg_Send(void){
 		unsigned char pcs_Remote_signal = 0;
 		unsigned char pcs_on_off1 = 0;
 		int pos=0;
+		int Fault_pcs = 0; //统计故障数
 
-		for(i=0;i<total_pcsnum;i++){
-			printf("整体开关机 pcs_on_off_flag[%d]:%d \n",i,pcs_on_off_flag[i]);
-		}
+		
 		//整体并离网
 		for(i=0;i<total_pcsnum-1;i++){
 			for(j=1;j<total_pcsnum;j++){
@@ -627,6 +641,41 @@ static int YX_ztMsg_Send(void){
 			}		
 		}
 
+		for(i=0;i<total_pcsnum;i++){
+				if (pcs_fault_flag[i] == 1)
+					Fault_pcs++;
+				// printf("整体开关机 pcs_on_off_flag[%d]:%d \n",i,pcs_on_off_flag[i]);
+		}
+
+		// 上传故障
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _INT_;
+		senddata.data_info[pos].sAddr.pointID = 7;
+		*(int *)&senddata.data_info[pos].data = Fault_pcs;
+		pos++;
+
+		//额定功率
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _FLOAT_;
+		senddata.data_info[pos].sAddr.pointID = 23;
+		*(float *)&senddata.data_info[pos].data = 180 * (total_pcsnum - Fault_pcs);
+		pos++;
+
+		//额定容量
+		senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		senddata.data_info[pos].sAddr.devID = 1;
+		senddata.data_info[pos].sAddr.typeID = 2;
+		senddata.data_info[pos].data_size = 4;
+		senddata.data_info[pos].el_tag = _FLOAT_;
+		senddata.data_info[pos].sAddr.pointID = 24;
+		*(float *)&senddata.data_info[pos].data = 180 * (total_pcsnum - Fault_pcs);
+		pos++;
 				
 
 		senddata.data_info[pos].sAddr.portID = INFO_EMU;
@@ -665,13 +714,14 @@ static int YX_ztMsg_Send(void){
 		senddata.data_info[pos].data[0] = pcs_on_off1;
 		pos++;
 
+
+
+		senddata.num = pos;
 		for ( i = 0; i < pos; i++)
 		{
 			printf("总体信息 发给 61850 遥信 标识:%d %d %d %d data:%d\n",senddata.data_info[i].sAddr.portID,senddata.data_info[i].sAddr.devID,senddata.data_info[i].sAddr.typeID,senddata.data_info[i].sAddr.pointID,senddata.data_info[i].data[0]);
 		}
 		
-
-		senddata.num = pos;
 		ret = sendtotask(&senddata);
 
 		if (ret == 1)
@@ -683,6 +733,62 @@ static int YX_ztMsg_Send(void){
 
 		return 0;
 }
+
+// static int sendOverallMsg(void){
+	
+// 	MyData senddata;
+// 	int Fault_pcs = 0; //统计故障pcs
+// 	int pos,ret;
+	
+// 	for (i = 0; i < total_pcsnum; i++){
+// 		if (pcs_fault_flag[i] == 1){
+// 			Fault_pcs++;
+// 		}	
+// 	}
+
+// 	// 上传故障
+// 	senddata.data_info[pos].sAddr.portID = INFO_EMU;
+// 	senddata.data_info[pos].sAddr.devID = 1;
+// 	senddata.data_info[pos].sAddr.typeID = 2;
+// 	senddata.data_info[pos].data_size = 4;
+// 	senddata.data_info[pos].el_tag = _INT_;
+// 	senddata.data_info[pos].sAddr.pointID = 7;
+// 	*(int *)&senddata.data_info[pos].data = Fault_pcs;
+// 	pos++;
+
+// 	//额定功率
+// 	senddata.data_info[pos].sAddr.portID = INFO_EMU;
+// 	senddata.data_info[pos].sAddr.devID = 1;
+// 	senddata.data_info[pos].sAddr.typeID = 2;
+// 	senddata.data_info[pos].data_size = 4;
+// 	senddata.data_info[pos].el_tag = _FLOAT_;
+// 	senddata.data_info[pos].sAddr.pointID = 23;
+// 	*(float *)&senddata.data_info[pos].data = 180 * (total_pcsnum - Fault_pcs);
+// 	pos++;
+
+// 	//额定容量
+// 	senddata.data_info[pos].sAddr.portID = INFO_EMU;
+// 	senddata.data_info[pos].sAddr.devID = 1;
+// 	senddata.data_info[pos].sAddr.typeID = 2;
+// 	senddata.data_info[pos].data_size = 4;
+// 	senddata.data_info[pos].el_tag = _FLOAT_;
+// 	senddata.data_info[pos].sAddr.pointID = 24;
+// 	*(float *)&senddata.data_info[pos].data = 180 * (total_pcsnum - Fault_pcs);
+// 	pos++;
+	
+
+// 	senddata.num = pos;
+
+// 	ret = sendtotask(&senddata);
+
+// 	if (ret == 1)
+// 	{
+// 		printf("整体故障，额定功率、容量 数据上传成功！！！\n");
+// 	}
+// 	else
+// 		printf("整体故障，额定功率、容量 数据失败成功！！！\n");
+// 	return 0;
+// }
 
 int recvfromlcd(unsigned char type, void *pdata)
 {
@@ -722,6 +828,7 @@ int recvfromlcd(unsigned char type, void *pdata)
 			countSumAve_yc_Send();
 			countSumAve_yc_Send1();
 			sendParaLcd();
+			// sendOverallMsg();
 			flag_recv_lcd = 0;
 		}
 	}

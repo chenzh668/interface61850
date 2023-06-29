@@ -246,14 +246,14 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata,int numpcs
 		*(float *)&senddata.data_info[pos].data = (sum_Bams_Soc / (total_pcsnum - sum_errpcs_num))/1000.0;
 		pos++;
 
-		senddata.data_info[pos].sAddr.portID = INFO_EMU;
-		senddata.data_info[pos].sAddr.devID = 1;
-		senddata.data_info[pos].sAddr.typeID = 2;
-		senddata.data_info[pos].data_size = 4;
-		senddata.data_info[pos].el_tag = _INT_;
-		senddata.data_info[pos].sAddr.pointID = 7;
-		*(int *)&senddata.data_info[pos].data = sum_errpcs_num;
-		pos++;
+		// senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		// senddata.data_info[pos].sAddr.devID = 1;
+		// senddata.data_info[pos].sAddr.typeID = 2;
+		// senddata.data_info[pos].data_size = 4;
+		// senddata.data_info[pos].el_tag = _INT_;
+		// senddata.data_info[pos].sAddr.pointID = 7;
+		// *(int *)&senddata.data_info[pos].data = sum_errpcs_num;
+		// pos++;
 
 		//最高单体电压
 		senddata.data_info[pos].sAddr.portID = INFO_EMU;
@@ -277,25 +277,25 @@ static int countSumAve_Send(unsigned char pcsid, unsigned char *pdata,int numpcs
 		*(float *)&senddata.data_info[pos].data = Minimum_unit_voltage;
 		pos++;
 
-		//额定功率
-		senddata.data_info[pos].sAddr.portID = INFO_EMU;
-		senddata.data_info[pos].sAddr.devID = 1;
-		senddata.data_info[pos].sAddr.typeID = 2;
-		senddata.data_info[pos].data_size = 4;
-		senddata.data_info[pos].el_tag = _FLOAT_;
-		senddata.data_info[pos].sAddr.pointID = 23;
-		*(float *)&senddata.data_info[pos].data = 180 * (total_pcsnum - sum_errpcs_num);
-		pos++;
+		// //额定功率
+		// senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		// senddata.data_info[pos].sAddr.devID = 1;
+		// senddata.data_info[pos].sAddr.typeID = 2;
+		// senddata.data_info[pos].data_size = 4;
+		// senddata.data_info[pos].el_tag = _FLOAT_;
+		// senddata.data_info[pos].sAddr.pointID = 23;
+		// *(float *)&senddata.data_info[pos].data = 180 * (total_pcsnum - sum_errpcs_num);
+		// pos++;
 
-		//额定容量
-		senddata.data_info[pos].sAddr.portID = INFO_EMU;
-		senddata.data_info[pos].sAddr.devID = 1;
-		senddata.data_info[pos].sAddr.typeID = 2;
-		senddata.data_info[pos].data_size = 4;
-		senddata.data_info[pos].el_tag = _FLOAT_;
-		senddata.data_info[pos].sAddr.pointID = 24;
-		*(float *)&senddata.data_info[pos].data = 180 * (total_pcsnum - sum_errpcs_num);
-		pos++;
+		// //额定容量
+		// senddata.data_info[pos].sAddr.portID = INFO_EMU;
+		// senddata.data_info[pos].sAddr.devID = 1;
+		// senddata.data_info[pos].sAddr.typeID = 2;
+		// senddata.data_info[pos].data_size = 4;
+		// senddata.data_info[pos].el_tag = _FLOAT_;
+		// senddata.data_info[pos].sAddr.pointID = 24;
+		// *(float *)&senddata.data_info[pos].data = 180 * (total_pcsnum - sum_errpcs_num);
+		// pos++;
 
 		//总禁止充电
 		senddata.data_info[pos].sAddr.portID = INFO_EMU;
